@@ -1,15 +1,20 @@
-// src/components/Layout.js
 import React from 'react';
 import { TabMenu } from 'primereact/tabmenu';
 import { useNavigate, useLocation } from 'react-router-dom';
+import logo from "../assets/logo.png";
+import '../layout.css';
+
 
 export default function Layout({ children }) {
     const navigate = useNavigate();
     const location = useLocation();
 
     const items = [
-        { label: 'דוגמה', icon: 'pi pi-sign-in', path: '/example' },
-        { label: 'דוגמה 2', icon: 'pi pi-sign-in', path: '/example2' }
+        { label: 'home page', icon: 'pi pi-home', path: '/' },
+        { label: 'sudents', icon: 'pi pi-users', path: '/students' },
+        { label: 'teachers', icon: 'pi pi-user', path: '/teachers' },
+        { label: 'schedule', icon: 'pi pi-calendar', path: '/schedule' }
+        
     ];
 
     const activeIndex = items.findIndex(item => item.path === location.pathname);
@@ -28,7 +33,7 @@ export default function Layout({ children }) {
             </div>
 
             <footer className="text-center py-3 surface-200">
-                <img src="/logo.png" alt="לוגו" style={{ height: '40px' }} />
+                 <img src={logo} alt="Logo" style={{ width: "120px" }} />
             </footer>
         </div>
     );

@@ -5,10 +5,12 @@ import 'primeflex/primeflex.css';
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
-import Example from './components/Example';
-import Example2 from './components/Example2';
 import Login from './components/Login'; // וודאי שזה הנתיב הנכון
 import Register from './components/Register'; // וודאי שזה הנתיב הנכון
+import HomePage from './components/HomePage';
+import ScheduleManagement from './components/ScheduleManagement';
+import StudentManagement from './components/students/StudentManagement';
+import TeachersManagement from './components/teachers/TeachersManagement';
 
 function App() {
     return (
@@ -20,15 +22,20 @@ function App() {
 
                 {/* דפים אחרים עם Layout */}
                 <Route
-                    path="/example"
-                    element={  <Layout> <Example /> </Layout> }/>
+                    path="/schedule"
+                    element={<Layout> <ScheduleManagement /> </Layout>}
+                />
                 <Route
-                    path="/example2"
-                    element={
-                        <Layout>
-                            <Example2 />
-                        </Layout>
-                    }
+                    path="/teachers"
+                    element={<Layout> <TeachersManagement /> </Layout>}
+                />
+                <Route
+                    path="/students"
+                    element={<Layout> <StudentManagement /> </Layout>}
+                />
+                <Route
+                    path="/"
+                    element={<Layout> <HomePage /> </Layout>}
                 />
             </Routes>
         </Router>
