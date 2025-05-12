@@ -12,7 +12,7 @@ export default function Layout({ children }) {
     const items = [
         { label: 'home page', icon: 'pi pi-home', path: '/' },
         { label: 'sudents', icon: 'pi pi-users', path: '/students' },
-        { label: 'teachers', icon: 'pi pi-user', path: '/teachers' },
+        { label: 'lessons', icon: 'pi pi-book', path: '/lessons' },
         { label: 'schedule', icon: 'pi pi-calendar', path: '/schedule' }
         
     ];

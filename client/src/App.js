@@ -10,7 +10,7 @@ import Register from './components/Register'; // וודאי שזה הנתיב ה
 import HomePage from './components/HomePage';
 import ScheduleManagement from './components/ScheduleManagement';
 import StudentManagement from './components/students/StudentManagement';
-import TeachersManagement from './components/teachers/TeachersManagement';
+import TeachersManagement from './components/lessons/LessonsManagement';
 
 function App() {
     return (
@@ -26,7 +26,7 @@ function App() {
                     element={<Layout> <ScheduleManagement /> </Layout>}
                 />
                 <Route
-                    path="/teachers"
+                    path="/lessons"
                     element={<Layout> <TeachersManagement /> </Layout>}
                 />
                 <Route
