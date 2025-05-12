@@ -20,8 +20,7 @@ const StudentManagement = () => {
         });
         setAllStudents(data);
     };
-    
-    
+
     const deleteStudent = async (id) => {
         const token = localStorage.getItem("token");
         await Axios.delete(`http://localhost:1235/api/student/deleteStudent/${id}`, {
@@ -31,7 +30,6 @@ const StudentManagement = () => {
         });
         fetchStudents();
     };
-    
 
     useEffect(() => {
         fetchStudents();
@@ -39,14 +37,23 @@ const StudentManagement = () => {
 
     const header = (
         <div className="flex flex-wrap align-items-center justify-content-between gap-2">
-            <span className="text-xl text-900 font-bold">Students</span>
+            <span className="text-xl text-900 font-bold" style={{ color: '#6A0DAD' }}>Students</span>
         </div>
     );
 
     const footer = `In total there are ${allStudents ? allStudents.length : 0} students.`;
 
+  
+    const purpleColor = '#542468';
+
+    const buttonStyle = {
+        backgroundColor: purpleColor,
+        borderColor: purpleColor,
+        color: '#FFFFFF', 
+    };
+
     return (
-        <div className="card">
+        <div className="card" style={{ backgroundColor: '#F4F4F4' }}>
             {activeComponent === "update" ? (
                 <UpdateStudent fetchStudents={fetchStudents} student={student} setActiveComponent={setActiveComponent} />
             ) : activeComponent === "add" ? (
@@ -54,11 +61,22 @@ const StudentManagement = () => {
             ) : (
                 <>
                     <div style={{ display: "flex", justifyContent: "center" }}>
-                        <Button style={{ marginBottom: "5px" }} onClick={() => setActiveComponent("add")} icon="pi pi-plus" className="p-button-rounded">
+                        <Button 
+                            style={{ ...buttonStyle, marginBottom: "5px" }} 
+                            onClick={() => setActiveComponent("add")} 
+                            icon="pi pi-plus" 
+                            className="p-button-rounded"
+                        >
                             Add Student
                         </Button>
                     </div>
-                    <DataTable value={allStudents} header={header} footer={footer} tableStyle={{ minWidth: '60rem' }}>
+                    <DataTable 
+                        value={allStudents} 
+                        header={header} 
+                        footer={footer} 
+                        tableStyle={{ minWidth: '60rem' }}
+                        style={{ backgroundColor: '#FFFFFF' }}
+                    >
                         <Column field="name" header="Name" />
                         <Column field="idNumber" header="ID Number" />
                         <Column field="classNumber" header="Class Number" />
@@ -66,11 +84,21 @@ const StudentManagement = () => {
                         <Column field="active" header="Active" />
                         <Column body={(rowData) => (
                             <div className="flex align-items-center gap-2">
-                                <Button onClick={() => deleteStudent(rowData._id)} icon="pi pi-trash" className="p-button-rounded" />
-                                <Button onClick={() => {
-                                    setActiveComponent("update");
-                                    setStudent(rowData);
-                                }} icon="pi pi-pencil" className="p-button-rounded" />
+                                <Button 
+                                    onClick={() => deleteStudent(rowData._id)} 
+                                    icon="pi pi-trash" 
+                                    className="p-button-rounded" 
+                                    style={buttonStyle} 
+                                />
+                                <Button 
+                                    onClick={() => {
+                                        setActiveComponent("update");
+                                        setStudent(rowData);
+                                    }} 
+                                    icon="pi pi-pencil" 
+                                    className="p-button-rounded" 
+                                    style={buttonStyle} 
+                                />
                             </div>
                         )} />
                     </DataTable>
