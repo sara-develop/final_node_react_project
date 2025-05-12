@@ -15,7 +15,7 @@ export default function AddStudent({ fetchStudents, setActiveComponent }) {
             const token = localStorage.getItem("token");
 
             await Axios.post('http://localhost:1235/api/student/addStudent',
-                { name, idNumber, parentEmail, classNumber},
+                { name, idNumber, parentEmail, classNumber },
                 {
                     headers: {
                         Authorization: `Bearer ${token}`
@@ -31,31 +31,78 @@ export default function AddStudent({ fetchStudents, setActiveComponent }) {
         }
     };
 
+    const purpleColor = '#542468';
+
+    const buttonStyle = {
+        backgroundColor: purpleColor,
+        borderColor: purpleColor,
+        color: '#FFFFFF',
+    };
+
     return (
-        <div className="card p-4">
-            <h2 className="mb-4" style={{ color: "#542468" }}>הוספת תלמידה</h2>
-            {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
+        <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            paddingTop: '1rem',
+            paddingBottom: '1rem',
+            backgroundColor: '#FFFFFF',
+        }}>
+            <div style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: '12px',
+                padding: '2rem',
+                width: '100%',
+                maxWidth: '400px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                position: 'relative',
+            }}>
+                {/* כפתור איקס */}
+                <Button
+                    icon="pi pi-times"
+                    onClick={() => setActiveComponent("")}
+                    className="p-button-rounded p-button-text"
+                    style={{
+                        position: 'absolute',
+                        top: '1rem',
+                        right: '1rem',
+                        color: purpleColor,
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        fontSize: '1.2rem',
+                    }}
+                />
 
-            <div className="mb-3">
-                <label className="block font-bold mb-1">Name</label>
-                <InputText value={name} onChange={(e) => setName(e.target.value)} className="w-full" />
-            </div>
-            <div className="mb-3">
-                <label className="block font-bold mb-1">ID Number</label>
-                <InputText value={idNumber} onChange={(e) => setIdNumber(e.target.value)} className="w-full" />
-            </div>
-            <div className="mb-3">
-                <label className="block font-bold mb-1">Parent Email</label>
-                <InputText value={parentEmail} onChange={(e) => setParentEmail(e.target.value)} className="w-full" />
-            </div>
-            <div className="mb-3">
-                <label className="block font-bold mb-1">Class Number</label>
-                <InputText value={classNumber} onChange={(e) => setClassNumber(e.target.value)} className="w-full" />
-            </div>
+                <h3 style={{ color: purpleColor, fontWeight: 'bold', marginTop: '0' }}>Add Student</h3>
 
-            <div className="flex gap-2">
-                <Button label="Add" icon="pi pi-check" onClick={handleAddStudent} style={{ backgroundColor: "#542468", borderColor: "#542468" }} />
-                <Button label="Cancel" icon="pi pi-times" className="p-button-outlined" style={{ color: "#58585a", borderColor: "#58585a" }} onClick={() => setActiveComponent("")} />
+                {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
+
+                <div className="p-fluid">
+                    <div className="mb-3">
+                        <label className="block font-bold mb-1" style={{ color: purpleColor }}>Name</label>
+                        <InputText value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="block font-bold mb-1" style={{ color: purpleColor }}>ID Number</label>
+                        <InputText value={idNumber} onChange={(e) => setIdNumber(e.target.value)} placeholder="ID Number" />
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="block font-bold mb-1" style={{ color: purpleColor }}>Parent Email</label>
+                        <InputText value={parentEmail} onChange={(e) => setParentEmail(e.target.value)} placeholder="Parent Email" />
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block font-bold mb-1" style={{ color: purpleColor }}>Class Number</label>
+                        <InputText value={classNumber} onChange={(e) => setClassNumber(e.target.value)} placeholder="Class Number" />
+                    </div>
+
+                    <div className="flex justify-center">
+                        <Button label="Add" 
+                        // icon="pi pi-check" 
+                        onClick={handleAddStudent} style={buttonStyle} />
+                    </div>
+                </div>
             </div>
         </div>
     );

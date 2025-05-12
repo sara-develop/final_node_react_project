@@ -32,9 +32,9 @@ const UpdateStudent = ({ fetchStudents, student, setActiveComponent }) => {
         <div style={{
             display: 'flex',
             justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '100vh',
-            backgroundColor: '#FFFFFF', // רקע כללי לבן
+            paddingTop: '1rem',
+            paddingBottom: '1rem',
+            backgroundColor: '#FFFFFF',
         }}>
             <div style={{
                 backgroundColor: '#FFFFFF',
@@ -61,7 +61,7 @@ const UpdateStudent = ({ fetchStudents, student, setActiveComponent }) => {
                     }}
                 />
 
-                <h3 style={{ color: purpleColor, fontWeight: 'bold', marginTop: '0' }}>Update Student</h3>
+                <h3 style={{ color: purpleColor, fontWeight: 'bold', marginTop: '0' }}>Edit Student</h3>
 
                 <div className="p-fluid">
                     <div className="mb-3">
@@ -84,7 +84,7 @@ const UpdateStudent = ({ fetchStudents, student, setActiveComponent }) => {
                         <InputText name="parentEmail" value={updatedStudent.parentEmail} onChange={handleChange} placeholder="Parent Email" />
                     </div>
 
-                    <Button label="Update" onClick={handleSubmit} style={buttonStyle} />
+                    <Button label="Edit" onClick={handleSubmit} style={buttonStyle} />
                 </div>
             </div>
         </div>
