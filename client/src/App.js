@@ -8,9 +8,10 @@ import Layout from './components/Layout';
 import Login from './components/Login'; // וודאי שזה הנתיב הנכון
 import Register from './components/Register'; // וודאי שזה הנתיב הנכון
 import HomePage from './components/HomePage';
-import ScheduleManagement from './components/ScheduleManagement';
+import ScheduleManagement from './components/schedule/ScheduleManagement';
 import StudentManagement from './components/students/StudentManagement';
-import TeachersManagement from './components/lessons/LessonsManagement';
+import LessonsManagement from './components/lessons/LessonsManagement';
+import InsertLesson from './components/schedule/InsertLesson';
 
 function App() {
     return (
@@ -27,7 +28,7 @@ function App() {
                 />
                 <Route
                     path="/lessons"
-                    element={<Layout> <TeachersManagement /> </Layout>}
+                    element={<Layout> <LessonsManagement /> </Layout>}
                 />
                 <Route
                     path="/students"
@@ -36,6 +37,10 @@ function App() {
                 <Route
                     path="/"
                     element={<Layout> <HomePage /> </Layout>}
+                />
+                <Route
+                    path="/insert-lesson"
+                    element={<Layout> <InsertLesson /> </Layout>}
                 />
             </Routes>
         </Router>
