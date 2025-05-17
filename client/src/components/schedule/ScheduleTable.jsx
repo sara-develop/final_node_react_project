@@ -4,36 +4,63 @@ import { Dialog } from 'primereact/dialog';
 import { Dropdown } from 'primereact/dropdown';
 import axios from 'axios';
 
-const ScheduleTable = () => {
+const ScheduleTable = ({ classNumber }) => {
     const [lessons, setLessons] = useState([]);
     const [selectedLesson, setSelectedLesson] = useState(null);
-    const [showDialog, setShowDialog] = useState(false);  // מצב להציג את הפופ-אפ
-    const [selectedDay, setSelectedDay] = useState(null); // אם צריך לשמור את היום שנבחר
-    const [lessonIndex, setLessonIndex] = useState(null); // אם צריך לשמור את האינדקס של השיעור
+    const [showDialog, setShowDialog] = useState(false);
+    const [selectedDay, setSelectedDay] = useState(null);
+    const [lessonIndex, setLessonIndex] = useState(null);
+    const [schedule, setSchedule] = useState({});
 
     // שליפת כל השיעורים מה-API
     const fetchLessons = async () => {
         try {
-            const response = await axios.get('/api/getAllLessons'); // URL המתאים לאפיון ה-API שלך
-            setLessons(response.data);  // עדכון המערך של השיעורים
+            const response = await axios.get('http://localhost:1235/api/lesson/getAllLessons');
+            setLessons(response.data);
         } catch (error) {
             console.error('Error fetching lessons:', error);
         }
     };
 
-    useEffect(() => {
-        fetchLessons(); // קריאה לפונקציה בטעינה הראשונית
-    }, []);
+    // שליפת מערכת שעות מסוימת
+    const fetchSchedule = async () => {
+        try {
+            const response = await axios.get(`http://localhost:1235/api/schedule/getScheduleByClassNumber/${classNumber}`);
+            setSchedule(response.data);
+        } catch (error) {
+            console.error('Error fetching schedule:', error);
+        }
+    };
 
-    const handleEdit = (classNumber, day, lessonIndex) => {
+    useEffect(() => {
+        fetchLessons();
+        fetchSchedule();
+    }, [classNumber]);
+
+    const handleEdit = (day, lessonIndex) => {
         setSelectedDay(day);
         setLessonIndex(lessonIndex);
-        setShowDialog(true);  // פותח את חלון הבחירה
+        setSelectedLesson(schedule[day]?.lessons?.[lessonIndex] || null);
+        setShowDialog(true);
     };
 
     const handleLessonSelect = (e) => {
-        setSelectedLesson(e.value); // עדכון השיעור שנבחר
-        setShowDialog(false); // סגירת הפופ-אפ
+        setSelectedLesson(e.value);
+    };
+
+    const handleSave = () => {
+        const updatedSchedule = { ...schedule };
+        updatedSchedule[selectedDay].lessons[lessonIndex] = selectedLesson;
+
+        // שליחה לעדכון המערכת ב-API
+        axios.put(`http://localhost:1235/api/schedule/updateSchedule`, updatedSchedule)
+            .then(() => {
+                setSchedule(updatedSchedule);
+                setShowDialog(false);
+            })
+            .catch(err => {
+                console.error('Error saving schedule:', err);
+            });
     };
 
     const renderSchedule = () => {
@@ -55,35 +82,51 @@ const ScheduleTable = () => {
                         fontFamily: 'Arial, sans-serif',
                         direction: 'ltr',
                         tableLayout: 'fixed',
+                        border: '1px solid #ddd', // border דק עדין לכל הטבלה
+                        borderRadius: '8px',
+                        marginTop: '20px',
                     }}
                 >
                     <thead>
                         <tr>
-                            <th>Lesson</th>
+                            <th style={{ padding: '10px', backgroundColor: '#f1f1f1', fontWeight: 'bold' }}>Lesson</th>
                             {days.map(day => (
-                                <th key={day.key}>{day.label}</th>
+                                <th key={day.key} style={{ padding: '10px', backgroundColor: '#f1f1f1' }}>
+                                    {day.label}
+                                </th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
                         {Array.from({ length: 8 }, (_, lessonIndex) => (
                             <tr key={lessonIndex}>
-                                <td>Lesson {lessonIndex + 1}</td>
+                                <td style={{ padding: '10px' }}>Lesson {lessonIndex + 1}</td>
                                 {days.map(day => (
-                                    <td key={day.key}>
-                                        <div style={{ position: 'relative', height: '50px' }}>
+                                    <td key={day.key} style={{ padding: '10px', position: 'relative' }}>
+                                        <div
+                                            style={{
+                                                backgroundColor: '#fff',
+                                                border: '1px solid #ddd',
+                                                borderRadius: '8px',
+                                                padding: '10px',
+                                                cursor: 'pointer',
+                                                boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+                                                transition: 'all 0.2s',
+                                            }}
+                                            onClick={() => handleEdit(day.key, lessonIndex)}
+                                        >
+                                            <span style={{ fontSize: '14px', color: '#333' }}>
+                                                {schedule[day.key]?.lessons?.[lessonIndex]?.name || 'No Lesson'}
+                                            </span>
                                             <Button
                                                 icon="pi pi-pencil"
-                                                onClick={() => handleEdit(classNumber, day.key, lessonIndex + 1)}
+                                                className="p-button-text"
                                                 style={{
-                                                    fontSize: '12px',
-                                                    padding: '4px',
                                                     position: 'absolute',
-                                                    top: '4px',
-                                                    right: '4px',
-                                                    backgroundColor: '#542468',
-                                                    border: 'none',
-                                                    color: 'white',
+                                                    top: '5px',
+                                                    right: '5px',
+                                                    fontSize: '12px',
+                                                    color: '#542468',
                                                 }}
                                             />
                                         </div>
@@ -118,6 +161,19 @@ const ScheduleTable = () => {
                     visible={showDialog}
                     onHide={() => setShowDialog(false)}
                     style={{ width: '50vw' }}
+                    footer={
+                        <Button
+                            label="Save"
+                            icon="pi pi-check"
+                            onClick={handleSave}
+                            style={{
+                                backgroundColor: '#542468',
+                                border: 'none',
+                                color: 'white',
+                                width: '100%',
+                            }}
+                        />
+                    }
                 >
                     <Dropdown
                         value={selectedLesson}

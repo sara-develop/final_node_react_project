@@ -15,6 +15,7 @@ export default function Layout({ children }) {
         { label: 'lessons', icon: 'pi pi-book', path: '/lessons' },
         { label: 'schedule', icon: 'pi pi-calendar', path: '/schedule' }
         
+        
     ];
 
     const activeIndex = items.findIndex(item => item.path === location.pathname);
