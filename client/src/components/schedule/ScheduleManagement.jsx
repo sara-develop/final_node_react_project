@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import ScheduleTableComponent from './ScheduleTable';
+import ScheduleTable from './ScheduleTable';
 
 const ScheduleManagement = () => {
     const [classNumber, setClassNumber] = useState('');
@@ -8,19 +8,20 @@ const ScheduleManagement = () => {
     const [loading, setLoading] = useState(true); // טוען את רשימת הכיתות
 
     useEffect(() => {
-        axios.get('http://localhost:1235/api/schedule/getAllClasses', {
+        axios.get('http://localhost:1235/api/student/getAllClasses', {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`
             }
         })
-        .then(response => {
-            setAllClasses(response.data);
-            setLoading(false); // סיים טעינת הכיתות
-        })
-        .catch(err => {
-            console.error('Failed to fetch class numbers', err);
-            setLoading(false);
-        });
+            .then(response => {
+                console.log('Classes fetched:', response.data); // לוג לבדיקה
+                setAllClasses(response.data.map(Number)); // המרה למספרים
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error('Failed to fetch class numbers', err);
+                setLoading(false);
+            });
     }, []);
 
     const handleClassChange = (event) => {
@@ -33,7 +34,7 @@ const ScheduleManagement = () => {
 
     return (
         <div>
-            <h2>Schedule Management</h2>
+            <h2>Weekly Schedule {classNumber && `- ${classNumber}`}</h2> {/* הצגת מספר הכיתה בכותרת */}
             <div>
                 <label htmlFor="classNumber">Select Class Number: </label>
                 <select
@@ -42,14 +43,18 @@ const ScheduleManagement = () => {
                     onChange={handleClassChange}
                 >
                     <option value="">Select a class</option>
-                    {allClasses.map((classNum) => (
-                        <option key={classNum} value={classNum}>{classNum}</option>
-                    ))}
+                    {allClasses.map((classNum) => {
+                        console.log('Rendering class:', classNum); // לוג לבדיקה
+                        return <option key={classNum} value={classNum}>{classNum}</option>;
+                    })}
                 </select>
             </div>
-            
+
             {classNumber && (
-                <ScheduleTableComponent classNumber={classNumber} />
+                <>
+                    {console.log('Selected class:', classNumber)} {/* לוג לבדיקה */}
+                    <ScheduleTable classNumber={classNumber} />
+                </>
             )}
         </div>
     );

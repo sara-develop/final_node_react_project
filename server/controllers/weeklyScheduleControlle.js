@@ -16,16 +16,6 @@ const createSchedule = async (req, res) => {
     }
 };
 
-const getAllClasses = async (req, res) => {
-    try {
-        const schedules = await WeeklySchedule.find({}, 'classNumber');
-        const classNumbers = [...new Set(schedules.map(s => s.classNumber))];
-        res.json(classNumbers);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch class numbers' });
-    }
-};
-
 const getScheduleByClassNumber = async (req, res) => {
     const { classNumber } = req.params;
     try {
@@ -36,11 +26,14 @@ const getScheduleByClassNumber = async (req, res) => {
             .populate('wednesday.lessons')
             .populate('thursday.lessons');
 
+        console.log('Fetched schedule:', schedule); // לוג לנתונים שנשלפים
+
         if (!schedule) {
             return res.status(404).json({ message: 'Schedule not found' });
         }
         res.status(200).json(schedule);
     } catch (err) {
+        console.error('Error fetching schedule:', err);
         return res.status(500).json({ message: 'Failed to get schedule', error: err });
     }
 };
@@ -102,6 +95,8 @@ const updateSchedule = async (req, res) => {
             return res.status(404).json({ message: 'Schedule not found' });
         }
 
+        console.log('Before update:', schedule); // לוג לפני העדכון
+
         Object.entries(scheduleUpdates).forEach(([day, data]) => {
             if (schedule[day]) {
                 schedule[day].lessons = data.lessons;
@@ -109,8 +104,12 @@ const updateSchedule = async (req, res) => {
         });
 
         await schedule.save();
+
+        console.log('After update:', schedule); // לוג אחרי העדכון
+
         return res.status(200).json({ message: 'Schedule updated' });
     } catch (err) {
+        console.error('Error updating schedule:', err);
         return res.status(500).json({ message: 'Update failed', error: err });
     }
 };
@@ -154,4 +153,4 @@ const deleteSchedule = async (req, res) => {
     }
 };
 
-module.exports = { createSchedule, getSchedule, getAllClasses,oneDaySchedule, updateSchedule, updateOneDaySchedule, deleteSchedule, getScheduleByClassNumber };
+module.exports = { createSchedule, getSchedule,oneDaySchedule, updateSchedule, updateOneDaySchedule, deleteSchedule, getScheduleByClassNumber };

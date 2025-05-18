@@ -10,5 +10,7 @@ router.get("/getAllStudents", verifyJWT, Student.getAll)
 router.put("/updateStudent/:id", verifyJWT, Student.updateStudent)
 router.put("/changeActive/:id", verifyJWT, Student.updateActive)
 router.delete("/deleteStudent/:id", verifyJWT, Student.deleteById)
+router.get("/getAllClasses", verifyJWT, Student.getAllClasses);
+router.put("/updateAttendance", verifyJWT, Student.getAllClasses);
 
 module.exports = router

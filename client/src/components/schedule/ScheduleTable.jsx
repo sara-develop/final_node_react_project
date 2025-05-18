@@ -8,9 +8,12 @@ const ScheduleTable = ({ classNumber }) => {
     const [lessons, setLessons] = useState([]);
     const [selectedLesson, setSelectedLesson] = useState(null);
     const [showDialog, setShowDialog] = useState(false);
+    const [showAttendanceDialog, setShowAttendanceDialog] = useState(false);
     const [selectedDay, setSelectedDay] = useState(null);
     const [lessonIndex, setLessonIndex] = useState(null);
     const [schedule, setSchedule] = useState({});
+    const [students, setStudents] = useState([]);
+    const [attendance, setAttendance] = useState([]);
 
     // שליפת כל השיעורים מה-API
     const fetchLessons = async () => {
@@ -32,10 +35,29 @@ const ScheduleTable = ({ classNumber }) => {
         }
     };
 
+    const fetchStudents = async () => {
+        try {
+            const response = await axios.get(`http://localhost:1235/api/student?classNumber=${classNumber}`);
+            setStudents(response.data);
+            setAttendance(response.data.map(student => ({
+                idNumber: student.idNumber,
+                status: 'Absent', // ברירת מחדל
+            })));
+        } catch (error) {
+            console.error('Error fetching students:', error);
+        }
+    };
+
     useEffect(() => {
         fetchLessons();
         fetchSchedule();
     }, [classNumber]);
+
+    useEffect(() => {
+        if (showAttendanceDialog) {
+            fetchStudents();
+        }
+    }, [showAttendanceDialog]);
 
     const handleEdit = (day, lessonIndex) => {
         setSelectedDay(day);
@@ -51,15 +73,45 @@ const ScheduleTable = ({ classNumber }) => {
     const handleSave = () => {
         const updatedSchedule = { ...schedule };
         updatedSchedule[selectedDay].lessons[lessonIndex] = selectedLesson;
-
-        // שליחה לעדכון המערכת ב-API
-        axios.put(`http://localhost:1235/api/schedule/updateSchedule`, updatedSchedule)
+    
+        axios.put('http://localhost:1235/api/schedule/updateSchedule', {
+            classNumber,
+            scheduleUpdates: updatedSchedule
+        })
             .then(() => {
-                setSchedule(updatedSchedule);
+                fetchSchedule(); // טוען מחדש את המערכת לאחר שמירה
                 setShowDialog(false);
             })
             .catch(err => {
                 console.error('Error saving schedule:', err);
+            });
+    };
+
+    const handleAttendance = (day, lessonIndex) => {
+        setSelectedDay(day);
+        setLessonIndex(lessonIndex);
+        setShowAttendanceDialog(true); // פותח את הדיאלוג לניהול נוכחות
+    };
+
+    const handleStatusChange = (idNumber, status) => {
+        setAttendance(prev =>
+            prev.map(a => (a.idNumber === idNumber ? { ...a, status } : a))
+        );
+    };
+
+    const handleSaveAttendance = () => {
+        axios.put('http://localhost:1235/api/attendance/updateAttendance', {
+            classNumber,
+            day: selectedDay,
+            lessonId: schedule[selectedDay]?.lessons?.[lessonIndex]?._id,
+            attendanceUpdates: attendance,
+        })
+            .then(() => {
+                alert('Attendance updated successfully');
+                setShowAttendanceDialog(false);
+            })
+            .catch(err => {
+                console.error('Error updating attendance:', err);
             });
     };
 
@@ -82,7 +134,7 @@ const ScheduleTable = ({ classNumber }) => {
                         fontFamily: 'Arial, sans-serif',
                         direction: 'ltr',
                         tableLayout: 'fixed',
-                        border: '1px solid #ddd', // border דק עדין לכל הטבלה
+                        border: '1px solid #ddd',
                         borderRadius: '8px',
                         marginTop: '20px',
                     }}
@@ -113,7 +165,6 @@ const ScheduleTable = ({ classNumber }) => {
                                                 boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
                                                 transition: 'all 0.2s',
                                             }}
-                                            onClick={() => handleEdit(day.key, lessonIndex)}
                                         >
                                             <span style={{ fontSize: '14px', color: '#333' }}>
                                                 {schedule[day.key]?.lessons?.[lessonIndex]?.name || 'No Lesson'}
@@ -128,6 +179,19 @@ const ScheduleTable = ({ classNumber }) => {
                                                     fontSize: '12px',
                                                     color: '#542468',
                                                 }}
+                                                onClick={() => handleEdit(day.key, lessonIndex)}
+                                            />
+                                            <Button
+                                                label="Attendance"
+                                                className="p-button-text"
+                                                style={{
+                                                    position: 'absolute',
+                                                    bottom: '5px',
+                                                    right: '5px',
+                                                    fontSize: '12px',
+                                                    color: '#007bff',
+                                                }}
+                                                onClick={() => handleAttendance(day.key, lessonIndex)}
                                             />
                                         </div>
                                     </td>
@@ -152,7 +216,7 @@ const ScheduleTable = ({ classNumber }) => {
             }}
         >
             <div style={{ width: '90%', maxWidth: '1000px' }}>
-                <h2 style={{ textAlign: 'center', color: '#4B296B', marginBottom: '2rem' }}>Weekly Schedule</h2>
+                <h2 style={{ textAlign: 'center', color: '#4B296L', marginBottom: '2rem' }}>Weekly Schedule</h2>
                 {renderSchedule()}
 
                 {/* פופ-אפ לבחירת שיעור */}
@@ -183,6 +247,55 @@ const ScheduleTable = ({ classNumber }) => {
                         placeholder="Select a lesson"
                         style={{ width: '100%' }}
                     />
+                </Dialog>
+
+                {/* פופ-אפ לניהול נוכחות */}
+                <Dialog
+                    header="Manage Attendance"
+                    visible={showAttendanceDialog}
+                    onHide={() => setShowAttendanceDialog(false)}
+                    style={{ width: '50vw' }}
+                    footer={
+                        <Button
+                            label="Save"
+                            icon="pi pi-check"
+                            onClick={handleSaveAttendance}
+                            style={{
+                                backgroundColor: '#007bff',
+                                border: 'none',
+                                color: 'white',
+                                width: '100%',
+                            }}
+                        />
+                    }
+                >
+                    <table style={{ width: '100%' }}>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {students.map(student => (
+                                <tr key={student.idNumber}>
+                                    <td>{student.name}</td>
+                                    <td>
+                                        <select
+                                            value={
+                                                attendance.find(a => a.idNumber === student.idNumber)?.status || 'Absent'
+                                            }
+                                            onChange={e => handleStatusChange(student.idNumber, e.target.value)}
+                                        >
+                                            <option value="Present">Present</option>
+                                            <option value="Late">Late</option>
+                                            <option value="Absent">Absent</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </Dialog>
             </div>
         </div>

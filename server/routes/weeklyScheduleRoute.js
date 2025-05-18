@@ -10,6 +10,6 @@ router.put("/updateSchedule", verifyJWT, WeeklyScheduleController.updateSchedule
 router.put("/updateOneDaySchedule", verifyJWT, WeeklyScheduleController.updateOneDaySchedule);
 router.delete("/deleteSchedule", verifyJWT, WeeklyScheduleController.deleteSchedule);
 router.get("/getScheduleByClassNumber/:classNumber", verifyJWT, WeeklyScheduleController.getScheduleByClassNumber);
-router.get("/getAllClasses", verifyJWT, WeeklyScheduleController.getAllClasses);
+
 
 module.exports = router;

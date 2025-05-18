@@ -4,6 +4,9 @@ import 'primeicons/primeicons.css';
 import 'primeflex/primeflex.css';
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Provider } from 'react-redux';  // ייבוא ה-Provider
+import store from './store/store';  // ייבוא ה-store
+
 import Layout from './components/Layout';
 import Login from './components/Login'; // וודאי שזה הנתיב הנכון
 import Register from './components/Register'; // וודאי שזה הנתיב הנכון
@@ -15,35 +18,37 @@ import InsertLesson from './components/schedule/InsertLesson';
 
 function App() {
     return (
-        <Router>
-            <Routes>
-                {/* עמוד login ללא Layout */}
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
+        <Provider store={store}>
+            <Router>
+                <Routes>
+                    {/* עמוד login ללא Layout */}
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
 
-                {/* דפים אחרים עם Layout */}
-                <Route
-                    path="/schedule"
-                    element={<Layout> <ScheduleManagement /> </Layout>}
-                />
-                <Route
-                    path="/lessons"
-                    element={<Layout> <LessonsManagement /> </Layout>}
-                />
-                <Route
-                    path="/students"
-                    element={<Layout> <StudentManagement /> </Layout>}
-                />
-                <Route
-                    path="/"
-                    element={<Layout> <HomePage /> </Layout>}
-                />
-                <Route
-                    path="/insert-lesson"
-                    element={<Layout> <InsertLesson /> </Layout>}
-                />
-            </Routes>
-        </Router>
+                    {/* דפים אחרים עם Layout */}
+                    <Route
+                        path="/schedule"
+                        element={<Layout> <ScheduleManagement /> </Layout>}
+                    />
+                    <Route
+                        path="/lessons"
+                        element={<Layout> <LessonsManagement /> </Layout>}
+                    />
+                    <Route
+                        path="/students"
+                        element={<Layout> <StudentManagement /> </Layout>}
+                    />
+                    <Route
+                        path="/"
+                        element={<Layout> <HomePage /> </Layout>}
+                    />
+                    <Route
+                        path="/insert-lesson"
+                        element={<Layout> <InsertLesson /> </Layout>}
+                    />
+                </Routes>
+            </Router>
+        </Provider >
     );
 }
 
