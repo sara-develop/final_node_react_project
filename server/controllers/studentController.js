@@ -149,4 +149,57 @@ const updateAttendanceForLesson = async (req, res) => {
     }
 };
 
-module.exports = { addStudent, getById, getAll, updateStudent, updateActive, deleteById ,getAllClasses,updateAttendanceForLesson}
+const getStudentByClassNumber = async (req, res) => {
+    const { classNumber } = req.params;
+
+    if (!classNumber) {
+        return res.status(400).json({ message: "Class number is required" });
+    }
+
+    try {
+        const students = await Student.find({ classNumber });
+        if (!students || students.length === 0) {
+            return res.status(404).json({ message: "No students found for this class" });
+        }
+
+        res.status(200).json(students);
+    } catch (err) {
+        console.error("Error fetching students:", err);
+        res.status(500).json({ message: "Failed to fetch students", error: err });
+    }
+};
+
+const getAttendanceByLesson = async (req, res) => {
+    const { classNumber, day, lessonId } = req.params;
+
+    if (!classNumber || !day || !lessonId) {
+        return res.status(400).json({ message: "Class number, day, and lesson ID are required" });
+    }
+
+    try {
+        // שליפת כל התלמידות בכיתה
+        const students = await Student.find({ classNumber });
+
+        if (!students || students.length === 0) {
+            return res.status(404).json({ message: "No students found for this class" });
+        }
+
+        // יצירת רשימה עם סטטוס הנוכחות לכל תלמידה
+        const attendanceData = students.map(student => {
+            const attendanceDay = student.weeklyAttendance[day] || [];
+            const lesson = attendanceDay.find(l => l.lessonId.toString() === lessonId);
+            return {
+                idNumber: student.idNumber,
+                name: student.name,
+                status: lesson ? lesson.status : 'Absent' // ברירת מחדל: 'Absent'
+            };
+        });
+
+        res.status(200).json(attendanceData);
+    } catch (err) {
+        console.error("Error fetching attendance:", err);
+        res.status(500).json({ message: "Failed to fetch attendance", error: err });
+    }
+};
+
+module.exports = { addStudent, getById, getAll, updateStudent, updateActive, deleteById ,getAllClasses,updateAttendanceForLesson, getStudentByClassNumber, getAttendanceByLesson}
