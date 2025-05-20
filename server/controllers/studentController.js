@@ -30,7 +30,7 @@ const getAllClasses = async (req, res) => {
         // שליפת מספרי הכיתות מתוך אוסף התלמידות
         const students = await Student.find({}, 'classNumber');
         const classNumbers = [...new Set(students.map(student => student.classNumber))];
-        
+
         console.log('Class numbers fetched from students:', classNumbers); // בדוק את הנתונים
         res.json(classNumbers);
     } catch (error) {
@@ -118,27 +118,24 @@ const updateAttendanceForLesson = async (req, res) => {
     }
 
     try {
-        // שליפת כל התלמידות בכיתה
         const students = await Student.find({ classNumber });
 
         if (!students || students.length === 0) {
             return res.status(404).json({ message: "No students found for this class" });
         }
 
-        // עדכון סטטוס הנוכחות לכל תלמידה
         for (const update of attendanceUpdates) {
             const student = students.find(s => s.idNumber === update.idNumber);
             if (student) {
-                const attendanceDay = student.weeklyAttendance[day];
-                if (attendanceDay) {
-                    const lesson = attendanceDay.find(l => l.lessonId.toString() === lessonId);
-                    if (lesson) {
-                        lesson.status = update.status; // עדכון הסטטוס
-                    } else {
-                        attendanceDay.push({ lessonId, status: update.status }); // הוספת שיעור חדש
-                    }
-                    await student.save();
+                const attendanceDay = student.weeklyAttendance[day] || [];
+                const lesson = attendanceDay.find(l => l.lessonId.toString() === lessonId);
+                if (lesson) {
+                    lesson.status = update.status;
+                } else {
+                    attendanceDay.push({ lessonId, status: update.status });
                 }
+                student.weeklyAttendance[day] = attendanceDay;
+                await student.save();
             }
         }
 
@@ -177,21 +174,19 @@ const getAttendanceByLesson = async (req, res) => {
     }
 
     try {
-        // שליפת כל התלמידות בכיתה
         const students = await Student.find({ classNumber });
 
         if (!students || students.length === 0) {
             return res.status(404).json({ message: "No students found for this class" });
         }
 
-        // יצירת רשימה עם סטטוס הנוכחות לכל תלמידה
         const attendanceData = students.map(student => {
             const attendanceDay = student.weeklyAttendance[day] || [];
             const lesson = attendanceDay.find(l => l.lessonId.toString() === lessonId);
             return {
                 idNumber: student.idNumber,
                 name: student.name,
-                status: lesson ? lesson.status : 'Absent' // ברירת מחדל: 'Absent'
+                status: lesson ? lesson.status : 'Absent'
             };
         });
 
@@ -202,4 +197,4 @@ const getAttendanceByLesson = async (req, res) => {
     }
 };
 
-module.exports = { addStudent, getById, getAll, updateStudent, updateActive, deleteById ,getAllClasses,updateAttendanceForLesson, getStudentByClassNumber, getAttendanceByLesson}
+module.exports = { addStudent, getById, getAll, updateStudent, updateActive, deleteById, getAllClasses, updateAttendanceForLesson, getStudentByClassNumber, getAttendanceByLesson }

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ScheduleTable from './ScheduleTable';
+import './scheduleManagement.css';
 
 const ScheduleManagement = () => {
     const [classNumber, setClassNumber] = useState('');
     const [allClasses, setAllClasses] = useState([]);
-    const [loading, setLoading] = useState(true); // טוען את רשימת הכיתות
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         axios.get('http://localhost:1235/api/student/getAllClasses', {
@@ -14,8 +15,7 @@ const ScheduleManagement = () => {
             }
         })
             .then(response => {
-                console.log('Classes fetched:', response.data); // לוג לבדיקה
-                setAllClasses(response.data.map(Number)); // המרה למספרים
+                setAllClasses(response.data.map(Number));
                 setLoading(false);
             })
             .catch(err => {
@@ -29,32 +29,36 @@ const ScheduleManagement = () => {
     };
 
     if (loading) {
-        return <div>Loading classes...</div>; // הצגת הודעת טעינה
+        return <div className="schedule-loading">Loading classes...</div>;
     }
 
     return (
-        <div>
-            <h2>Weekly Schedule {classNumber && `- ${classNumber}`}</h2> {/* הצגת מספר הכיתה בכותרת */}
-            <div>
-                <label htmlFor="classNumber">Select Class Number: </label>
+        <div className="schedule-management-container">
+            <h2 className="schedule-title">
+                Weekly Schedule Class #{classNumber && `${classNumber}`}
+            </h2>
+
+            <div className="select-class-container">
+                <label htmlFor="classNumber" className="select-label">Select Class Number: </label>
                 <select
                     id="classNumber"
                     value={classNumber}
                     onChange={handleClassChange}
+                    className="class-dropdown"
                 >
                     <option value="">Select a class</option>
-                    {allClasses.map((classNum) => {
-                        console.log('Rendering class:', classNum); // לוג לבדיקה
-                        return <option key={classNum} value={classNum}>{classNum}</option>;
-                    })}
+                    {allClasses.map((classNum) => (
+                        <option key={classNum} value={classNum}>
+                            {classNum}
+                        </option>
+                    ))}
                 </select>
             </div>
 
             {classNumber && (
-                <>
-                    {console.log('Selected class:', classNumber)} {/* לוג לבדיקה */}
+                <div className="schedule-table-wrapper">
                     <ScheduleTable classNumber={classNumber} />
-                </>
+                </div>
             )}
         </div>
     );
