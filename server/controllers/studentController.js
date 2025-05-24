@@ -1,4 +1,5 @@
 const Student = require("../models/student");
+const WeeklySchedule = require("../models/weeklySchedule"); // ודאי שהשורה הזו קיימת למעלה
 const nodemailer = require("nodemailer");
 const PDFDocument = require("pdfkit");
 const { Readable } = require("stream");
@@ -34,7 +35,22 @@ const getAllClasses = async (req, res) => {
         const students = await Student.find({}, 'classNumber');
         const classNumbers = [...new Set(students.map(student => student.classNumber))];
 
-        console.log('Class numbers fetched from students:', classNumbers); // בדוק את הנתונים
+        // יצירת מערכת שעות ריקה לכל כיתה שאין לה עדיין
+        for (const classNumber of classNumbers) {
+            const exists = await WeeklySchedule.findOne({ classNumber });
+            if (!exists) {
+                await WeeklySchedule.create({
+                    classNumber,
+                    sunday: { lessons: [] },
+                    monday: { lessons: [] },
+                    tuesday: { lessons: [] },
+                    wednesday: { lessons: [] },
+                    thursday: { lessons: [] }
+                });
+            }
+        }
+
+        console.log('Class numbers fetched from students:', classNumbers);
         res.json(classNumbers);
     } catch (error) {
         console.error('Error fetching class numbers from students:', error);
