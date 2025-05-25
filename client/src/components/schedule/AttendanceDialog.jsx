@@ -39,25 +39,14 @@ const AttendanceDialog = ({ visible, onHide, selectedDay, lessonIndex, classNumb
     const handleSaveAttendance = () => {
         if (!lessonId) {
             alert('לא נבחר שיעור או שאין מזהה לשיעור!');
+            return; // עצור את הפעולה אם אין מזהה שיעור
         }
-        // לוגים לבדיקה
-        console.log({
-            classNumber,
-            day: selectedDay,
-            lessonId,
-            attendanceUpdates: attendance,
-        });
-        console.log('schedule:', schedule);
-        console.log('selectedDay:', selectedDay);
-        console.log('lessonIndex:', lessonIndex);
-        console.log('schedule[selectedDay]:', schedule[selectedDay]);
-        console.log('schedule[selectedDay]?.lessons:', schedule[selectedDay]?.lessons);
-        console.log('lesson:', schedule[selectedDay]?.lessons?.[lessonIndex]);
 
         axios.put('http://localhost:1235/api/student/updateAttendanceForLesson', {
             classNumber,
             day: selectedDay,
             lessonId,
+            lessonIndex, // שליחת האינדקס של השיעור
             attendanceUpdates: attendance,
         })
             .then(() => {
@@ -66,6 +55,7 @@ const AttendanceDialog = ({ visible, onHide, selectedDay, lessonIndex, classNumb
             })
             .catch(err => {
                 console.error('Error updating attendance:', err);
+                alert('שגיאה בעדכון הנוכחות. נסה שוב מאוחר יותר.');
             });
     };
 

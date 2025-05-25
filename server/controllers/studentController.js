@@ -146,13 +146,19 @@ const updateAttendanceForLesson = async (req, res) => {
         for (const update of attendanceUpdates) {
             const student = students.find(s => s.idNumber === update.idNumber);
             if (student) {
+                // בדוק אם יש נוכחות ליום ולשיעור הספציפי
                 const attendanceDay = student.weeklyAttendance[day] || [];
-                const lesson = attendanceDay.find(l => l.lessonId.toString() === lessonId);
-                if (lesson) {
-                    lesson.status = update.status;
+                const lessonIndex = attendanceDay.findIndex(l => l.lessonId.toString() === lessonId);
+
+                if (lessonIndex !== -1) {
+                    // עדכן את הסטטוס של השיעור הקיים
+                    attendanceDay[lessonIndex].status = update.status;
                 } else {
+                    // הוסף שיעור חדש עם הסטטוס
                     attendanceDay.push({ lessonId, status: update.status });
                 }
+
+                // עדכן את הנוכחות ליום הספציפי
                 student.weeklyAttendance[day] = attendanceDay;
                 await student.save();
             }
@@ -219,7 +225,6 @@ const sendWeeklyAttendanceEmails = async (req, res) => {
     try {
         const students = await Student.find({ active: true });
 
-        // הגדרת טרנספורטר (הכניסי פרטי SMTP אמיתיים)
         const transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {
@@ -228,68 +233,96 @@ const sendWeeklyAttendanceEmails = async (req, res) => {
             }
         });
 
-        for (const student of students) {
-            // יצירת PDF בזיכרון
-            const doc = new PDFDocument({ margin: 30, size: 'A4' });
-            let buffers = [];
-            doc.on('data', buffers.push.bind(buffers));
-            doc.on('end', async () => {
-                const pdfData = Buffer.concat(buffers);
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
 
-                // שליחת המייל
-                await transporter.sendMail({
-                    from: process.env.EMAIL_USER,
-                    to: student.parentEmail,
-                    subject: `דו"ח נוכחות שבועי עבור ${student.name}`,
-                    text: `שלום,\nמצורף קובץ PDF עם סיכום הנוכחות השבועי של בתך ${student.name}.`,
-                    attachments: [
-                        {
-                            filename: `attendance_${student.name}.pdf`,
-                            content: pdfData
-                        }
-                    ]
+        // פונקציה שמייצרת PDF ושולחת מייל לתלמידה אחת
+        const sendMailForStudent = (student) => {
+            return new Promise((resolve, reject) => {
+                const doc = new PDFDocument({ margin: 50 });
+                let buffers = [];
+                doc.on('data', buffers.push.bind(buffers));
+
+                const attendance = student.weeklyAttendance || {};
+                const maxLessons = Math.max(...days.map(day =>
+                    (attendance[day.toLowerCase()] || []).length
+                ));
+
+                doc.font('Helvetica-Bold')
+                   .fontSize(18)
+                   .text(`Weekly Attendance Report - ${student.name}`, { align: 'left' });
+                doc.moveDown();
+
+                const startX = 50;
+                const columnWidth = 90;
+                let y = doc.y;
+
+                doc.font('Helvetica-Bold').fontSize(12);
+                doc.text('Lesson #', startX, y, { width: columnWidth, align: 'center' });
+                days.forEach((day, i) => {
+                    doc.text(day, startX + columnWidth * (i + 1), y, { width: columnWidth, align: 'center' });
                 });
-            });
 
-            // כותרת
-            doc.fontSize(18).text(`דו"ח נוכחות שבועי - ${student.name}`, { align: 'right' });
-            doc.moveDown();
+                for (let i = 0; i < maxLessons; i++) {
+                    y += 20;
+                    doc.font('Helvetica-Bold').text(`${i + 1}`, startX, y, {
+                        width: columnWidth,
+                        align: 'center'
+                    });
 
-            // טבלה
-            doc.fontSize(14);
-            const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday'];
-            const daysHeb = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי'];
-            doc.text('יום', 450, doc.y, { continued: true });
-            doc.text('שיעור', 350, doc.y, { continued: true });
-            doc.text('סטטוס', 250, doc.y);
-            doc.moveDown(0.5);
-
-            days.forEach((day, i) => {
-                const lessons = student.weeklyAttendance?.[day] || [];
-                if (lessons.length === 0) {
-                    doc.text(daysHeb[i], 450, doc.y, { continued: true });
-                    doc.text('-', 350, doc.y, { continued: true });
-                    doc.text('לא נרשמה נוכחות', 250, doc.y);
-                } else {
-                    lessons.forEach((lesson, idx) => {
-                        doc.text(daysHeb[i], 450, doc.y, { continued: true });
-                        doc.text(`${idx + 1}`, 350, doc.y, { continued: true });
-                        let status = lesson.status === 'Present' ? 'נוכחת' : lesson.status === 'Late' ? 'איחרה' : 'חסרה';
-                        doc.text(status, 250, doc.y);
+                    days.forEach((day, j) => {
+                        const status = attendance[day.toLowerCase()]?.[i]?.status || '';
+                        doc.font('Helvetica')
+                           .text(status, startX + columnWidth * (j + 1), y, {
+                               width: columnWidth,
+                               align: 'center'
+                           });
                     });
                 }
-                doc.moveDown(0.5);
+
+                doc.end();
+
+                doc.on('end', async () => {
+                    const pdfData = Buffer.concat(buffers);
+                    try {
+                        await transporter.sendMail({
+                            from: process.env.EMAIL_USER,
+                            to: student.parentEmail,
+                            subject: `Weekly Attendance Report for ${student.name}`,
+                            text: `Hello,\nAttached is a PDF file with the weekly attendance summary for your child ${student.name}.`,
+                            attachments: [
+                                {
+                                    filename: `attendance_${student.name}.pdf`,
+                                    content: pdfData
+                                }
+                            ]
+                        });
+                        resolve();
+                    } catch (err) {
+                        reject(err);
+                    }
+                });
             });
+        };
 
-            doc.end();
-            // המתן לסיום יצירת ה-PDF לפני המשך הלולאה
-            await new Promise(resolve => doc.on('end', resolve));
-        }
+        // שלח את כל המיילים במקביל
+        await Promise.all(students.map(sendMailForStudent));
 
-        res.json({ message: "המיילים נשלחו בהצלחה" });
+        res.json({ message: "Emails sent successfully!" });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: "שגיאה בשליחת המיילים" });
+        res.status(500).json({ message: "Error sending emails", error: err.message });
     }
 };
-module.exports = { addStudent, getById, getAll, updateStudent, updateActive, deleteById, getAllClasses, updateAttendanceForLesson, getStudentByClassNumber, getAttendanceByLesson,sendWeeklyAttendanceEmails }
+const getYearlySchedule = async (req, res) => {
+    try {
+        const schedule = await Schedule.find(); // שליפת נתונים מה-DB
+        res.status(200).json(schedule);
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to fetch schedule', error });
+    }
+};
+
+
+
+
+module.exports = { addStudent, getById, getAll, updateStudent, updateActive, deleteById, getAllClasses, updateAttendanceForLesson, getStudentByClassNumber, getAttendanceByLesson,sendWeeklyAttendanceEmails,getYearlySchedule }

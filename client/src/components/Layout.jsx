@@ -27,7 +27,8 @@ export default function Layout({ children }) {
         { label: 'students', icon: 'pi pi-users', path: '/students' },
         { label: 'lessons', icon: 'pi pi-book', path: '/lessons' },
         { label: 'schedule', icon: 'pi pi-calendar', path: '/schedule' },
-        { label: 'attendance', icon: 'pi pi-list-check', path: '/attendance' }
+        { label: 'attendance', icon: 'pi pi-list-check', path: '/attendance' },
+        { label: 'calendar', icon: 'pi pi-calendar', path: '/yearlySchedule' }
     ];
 
     const activeIndex = items.findIndex(item => item.path === location.pathname); // קביעת הלשונית הפעילה לפי הנתיב הנוכחי

@@ -4,8 +4,11 @@ import { Password } from "primereact/password";
 import { Button } from "primereact/button";
 import { Divider } from "primereact/divider";
 import logo from "../assets/logo.png";
-import Axios from 'axios';
-import { useNavigate } from "react-router-dom"; // ייבוא הניווט
+import Axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
+import { useDispatch } from "react-redux";
+import { setUser } from "../store/userSlice"; // ייבוא הפעולה
 
 import "primereact/resources/themes/saga-blue/theme.css";
 import "primereact/resources/primereact.min.css";
@@ -15,28 +18,42 @@ import "primeflex/primeflex.css";
 const Login = () => {
     const [id, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const navigate = useNavigate(); 
+    const navigate = useNavigate();
+    const dispatch = useDispatch(); // ייבוא הפונקציה dispatch
 
-    const gray = "#58585a"; 
-    const purple = "#542468"; 
+    const gray = "#58585a";
+    const purple = "#542468";
 
     const handleLogin = async () => {
         try {
-            const response = await Axios.post(`http://localhost:1235/api/user/login`, {
+            const response = await Axios.post("http://localhost:1235/api/user/login", {
                 id,
-                password
+                password,
             });
-            const token = response.data.token;
+
+            const token = response.data.accessToken;
+
+            const decoded = jwtDecode(token);
+            const username = decoded.username || decoded.name || decoded.id;
+
             localStorage.setItem("token", token);
-            console.log("Login successful:", response.data);
-            navigate("/");
+            localStorage.setItem("username", username);
+
+            // שליחת הנתונים ל-Redux
+            dispatch(setUser({ username, token }));
+
+            console.log("Login successful user:", decoded);
+            console.log("Login successful token:", token);
+
+
+            navigate("/HomePage");
         } catch (error) {
             console.error("Login failed:", error.response?.data || error.message);
         }
     };
 
     const goToRegister = () => {
-        navigate("/register"); 
+        navigate("/register");
     };
 
     return (
