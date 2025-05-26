@@ -2,18 +2,43 @@ import React, { useState, useEffect } from 'react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import Axios from 'axios';
+import { useSelector } from 'react-redux'; // לקריאת מידע מה־Redux store
+
 
 const UpdateStudent = ({ fetchStudents, student, setActiveComponent }) => {
+
     const [updatedStudent, setUpdatedStudent] = useState(student);
+
+    const token = useSelector(state => state.user.token); // או כל מקום שבו אתה שומר את הטוקן
+
 
     const handleChange = (e) => {
         setUpdatedStudent({ ...updatedStudent, [e.target.name]: e.target.value });
     };
 
+
     const handleSubmit = async () => {
-        await Axios.put(`http://localhost:1235/api/student/updateStudent/${updatedStudent._id}`, updatedStudent);
-        fetchStudents();
-        setActiveComponent("");
+        if (!token) {
+            alert("You must be logged in.");
+            return;
+        }
+
+        try {
+            await Axios.put(
+                `http://localhost:1235/api/student/updateStudent/${updatedStudent._id}`,
+                updatedStudent,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            fetchStudents();
+            setActiveComponent("");
+        } catch (error) {
+            console.error("Failed to update student:", error);
+            alert("Failed to update student. Please try again.");
+        }
     };
 
     useEffect(() => {

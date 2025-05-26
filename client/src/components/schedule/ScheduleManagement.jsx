@@ -2,16 +2,39 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ScheduleTable from './ScheduleTable';
 import './scheduleManagement.css';
+import { useSelector } from 'react-redux'; // לקריאת מידע מה־Redux store
+
 
 const ScheduleManagement = () => {
+
+
     const [classNumber, setClassNumber] = useState('');
     const [allClasses, setAllClasses] = useState([]);
     const [loading, setLoading] = useState(true);
 
+
+    //     axios.get('http://localhost:1235/api/student/getAllClasses', {
+    //         headers: {
+    //             Authorization: `Bearer ${'token'}`
+    //         }
+    //     })
+    //         .then(response => {
+    //             setAllClasses(response.data.map(Number));
+    //             setLoading(false);
+    //         })
+    //         .catch(err => {
+    //             console.error('Failed to fetch class numbers', err);
+    //             setLoading(false);
+    //         });
+    // }, []);
+    const token = useSelector(state => state.user.token); // או כל מקום שבו אתה שומר את הטוקן
+
     useEffect(() => {
+        if (!token) return; // אם אין טוקן אל תשלח בקשה
+
         axios.get('http://localhost:1235/api/student/getAllClasses', {
             headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`
+                Authorization: `Bearer ${token}`
             }
         })
             .then(response => {
@@ -22,7 +45,8 @@ const ScheduleManagement = () => {
                 console.error('Failed to fetch class numbers', err);
                 setLoading(false);
             });
-    }, []);
+    }, [token]);
+
 
     const handleClassChange = (event) => {
         setClassNumber(event.target.value);

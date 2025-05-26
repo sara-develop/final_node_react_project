@@ -4,8 +4,11 @@ import axios from 'axios';
 import AttendanceDialog from './AttendanceDialog';
 import LessonDialog from './LessonDialog';
 import './schedule.css';
+import { useSelector } from 'react-redux'; // לקריאת מידע מה־Redux store
+
 
 const ScheduleTable = ({ classNumber }) => {
+    const token = useSelector(state => state.user.token)  // קריאת שם המשתמש מה־Redux, או ברירת מחדל
     const [schedule, setSchedule] = useState({});
     const [showDialog, setShowDialog] = useState(false);
     const [showAttendanceDialog, setShowAttendanceDialog] = useState(false);
@@ -14,8 +17,15 @@ const ScheduleTable = ({ classNumber }) => {
 
     const fetchSchedule = async () => {
         try {
-            const response = await axios.get(`http://localhost:1235/api/schedule/getScheduleByClassNumber/${classNumber}`);
-            console.log('Fetched schedule:', response.data); // הוסיפי לוג כאן
+            const response = await axios.get(
+                `http://localhost:1235/api/schedule/getScheduleByClassNumber/${classNumber}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+            console.log('Fetched schedule:', response.data);
             setSchedule(response.data);
         } catch (error) {
             console.error('Error fetching schedule:', error);
@@ -99,7 +109,7 @@ const ScheduleTable = ({ classNumber }) => {
                 schedule={schedule}
                 setSchedule={setSchedule}
                 classNumber={classNumber}
-                refreshSchedule={fetchSchedule} // חשוב!
+                refreshSchedule={fetchSchedule}
             />
             <AttendanceDialog
                 visible={showAttendanceDialog}

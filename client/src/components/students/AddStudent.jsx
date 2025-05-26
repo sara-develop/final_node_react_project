@@ -2,6 +2,8 @@ import { useState } from 'react';
 import Axios from 'axios';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
+import { useSelector } from 'react-redux'; // לקריאת מידע מה־Redux store
+
 
 export default function AddStudent({ fetchStudents, setActiveComponent }) {
     const [name, setName] = useState('');
@@ -10,9 +12,11 @@ export default function AddStudent({ fetchStudents, setActiveComponent }) {
     const [classNumber, setClassNumber] = useState('');
     const [error, setError] = useState('');
 
+    const token = useSelector(state => state.user.token); // או כל מקום שבו אתה שומר את הטוקן
+
+
     const handleAddStudent = async () => {
         try {
-            const token = localStorage.getItem("token");
 
             await Axios.post('http://localhost:1235/api/student/addStudent',
                 { name, idNumber, parentEmail, classNumber },

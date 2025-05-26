@@ -1,24 +1,21 @@
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
 
 const verifyJWT = (req, res, next) => {
-    console.log('Verifying JWT...')
-    const authHeader = req.headers.authorization || req.headers.Authorization
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ message: "No token provided." });
 
-    if (!authHeader?.startsWith('Bearer ')) {
-        return res.status(401).json({ message: 'Unauthorized' })
-    }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) return res.status(403).json({ message: "Failed to authenticate token." });
 
-    const token = authHeader.split(' ')[1]
+    req.user = {
+      id: decoded.id,
+      role: decoded.role,  // חשוב ששם התפקיד יהיה בטוקן
+      // ...שדות נוספים אם יש
+    };
 
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-        if (err) {
-            return res.status(403).json({ message: 'Forbidden' })
-        }
+    next();
+  });
+};
 
-        req.user = decoded
-        next()
-    })
-    // next()
-}
-
-module.exports = verifyJWT
+module.exports = verifyJWT;
+// This middleware checks for a JWT in the request headers.

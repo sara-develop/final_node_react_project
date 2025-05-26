@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
+import { Messages } from 'primereact/messages';
 import Axios from 'axios';
 
 const Attendance = () => {
     const [allStudents, setAllStudents] = useState([]);
     const [selectedStudent, setSelectedStudent] = useState(null);
     const [showDialog, setShowDialog] = useState(false);
+    const messagesRef = useRef(null);
 
     const fetchStudents = async () => {
         const token = localStorage.getItem("token");
@@ -32,7 +34,6 @@ const Attendance = () => {
     const renderAttendanceTable = () => {
         if (!selectedStudent || !selectedStudent.weeklyAttendance) return null;
 
-        // סדר הימים
         const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday'];
         const dayLabels = {
             sunday: 'Sunday',
@@ -42,7 +43,6 @@ const Attendance = () => {
             thursday: 'Thursday'
         };
 
-        // נבנה מערך דו־ממדי: rows = שיעורים (1–8), columns = ימים
         const numLessons = 8;
 
         return (
@@ -108,20 +108,31 @@ const Attendance = () => {
                 {},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            alert("המיילים נשלחו בהצלחה לכל ההורים!");
+            messagesRef.current?.show({
+                severity: 'success',
+                summary: 'Success',
+                detail: 'המיילים נשלחו בהצלחה לכל ההורים!',
+                life: 3000
+            });
         } catch (error) {
-            alert("אירעה שגיאה בשליחת המיילים.");
+            messagesRef.current?.show({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'An error occurred while sending emails.',
+                life: 3000
+            });
             console.error(error);
         }
     };
 
     return (
         <div className="card" style={{ backgroundColor: '#F4F4F4' }}>
+            <Messages ref={messagesRef} />
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
                 <Button
                     label="שלח נוכחות שבועית לכל ההורים"
                     icon="pi pi-send"
-                    style={{ backgroundColor: '#542468', borderColor: '#542468', color: '#fff', marginBottom: '1rem' }}
+                    style={buttonStyle}
                     onClick={handleSendWeeklyAttendanceEmails}
                 />
             </div>

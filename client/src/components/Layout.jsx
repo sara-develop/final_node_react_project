@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux'; // לקריאת מידע מה־Redux 
 import logo from "../assets/logo.png"; // ייבוא של הלוגו שבתחתית העמוד
 import '../layout.css'; // קובץ CSS חיצוני לעיצוב מותאם
 
-export default function Layout({ children }) {
+const Layout = ({ children }) => { // קומפוננטת Layout שמקבלת children (תוכן פנימי)
     const navigate = useNavigate(); // פונקציה לניווט בין דפים
     const location = useLocation(); // מיקום נוכחי ב־URL
     const menuRef = useRef(null); // יצירת רפרנס עבור תפריט המשתמש
@@ -15,12 +15,22 @@ export default function Layout({ children }) {
     const purple = "#542468"; // צבע סגול - צבע עיקרי
     const gray = "#58585a"; // צבע אפור - עבור רקע ה־Avatar
 
-    const username = useSelector(state => state.user.username) || 'User'; // קריאת שם המשתמש מה־Redux, או ברירת מחדל
+    const username = useSelector(state => state.user?.username);
+
+    if (!username) {
+        return (
+            <div style={{ color: 'red', padding: '1rem' }}>
+                Error: Username is missing. Please login again.
+            </div>
+        );
+    }
+
     const initials = username
         .split(' ')
         .map(word => word[0])
         .join('')
-        .toLowerCase(); // הפקת ראשי התיבות של המשתמש (אותיות קטנות)
+        .toLowerCase();
+
 
     const items = [ // הגדרת פריטי ה־TabMenu (לשוניות)
         { label: 'home page', icon: 'pi pi-home', path: '/homePage' },
@@ -58,7 +68,7 @@ export default function Layout({ children }) {
 
     return (
         <div className="flex flex-column min-h-screen"> {/* קונטיינר ראשי פרוס לאורך כל גובה המסך */}
-            
+
             {/* סרגל עליון */}
             <div className="surface-100 px-3 py-2 flex justify-between align-items-center shadow-1">
                 <TabMenu
@@ -96,3 +106,5 @@ export default function Layout({ children }) {
         </div>
     );
 }
+
+export default Layout; // ייצוא הקומפוננטה לשימוש בקומפוננטות אחרות

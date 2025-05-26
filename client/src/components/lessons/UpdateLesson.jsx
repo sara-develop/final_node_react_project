@@ -1,13 +1,21 @@
 import { useState } from "react";
-import { updateLesson } from "../lessons/lessonService";
+import axios from "axios";
+import { useSelector } from "react-redux";
 import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
 
+const API = "http://localhost:1235/api/lesson";
+
 const UpdateLesson = ({ lesson, fetchLessons, setActiveComponent }) => {
     const [updatedLesson, setUpdatedLesson] = useState({ ...lesson });
+    const token = useSelector(state => state.user.token);
 
     const handleSubmit = async () => {
-        await updateLesson(updatedLesson._id, updatedLesson);
+        await axios.put(
+            `${API}/updateLesson/${updatedLesson._id}`,
+            updatedLesson,
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
         fetchLessons();
         setActiveComponent("");
     };
@@ -57,11 +65,19 @@ const UpdateLesson = ({ lesson, fetchLessons, setActiveComponent }) => {
                 <div className="p-fluid">
                     <div className="mb-3">
                         <label className="block font-bold mb-1" style={{ color: purpleColor }}>Name</label>
-                        <InputText value={updatedLesson.name} onChange={(e) => setUpdatedLesson({ ...updatedLesson, name: e.target.value })} placeholder="Name" />
+                        <InputText
+                            value={updatedLesson.name}
+                            onChange={(e) => setUpdatedLesson({ ...updatedLesson, name: e.target.value })}
+                            placeholder="Name"
+                        />
                     </div>
                     <div className="mb-4">
                         <label className="block font-bold mb-1" style={{ color: purpleColor }}>Teacher</label>
-                        <InputText value={updatedLesson.teacher} onChange={(e) => setUpdatedLesson({ ...updatedLesson, teacher: e.target.value })} placeholder="Teacher" />
+                        <InputText
+                            value={updatedLesson.teacher}
+                            onChange={(e) => setUpdatedLesson({ ...updatedLesson, teacher: e.target.value })}
+                            placeholder="Teacher"
+                        />
                     </div>
                     <div className="flex justify-center">
                         <Button label="Update" onClick={handleSubmit} style={buttonStyle} />

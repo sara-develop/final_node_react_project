@@ -2,8 +2,10 @@ const Student = require("../models/student");
 const WeeklySchedule = require("../models/weeklySchedule"); // ודאי שהשורה הזו קיימת למעלה
 const nodemailer = require("nodemailer");
 const PDFDocument = require("pdfkit");
-const { Readable } = require("stream");
 const { isValidId } = require("../utils")
+const Schedule = require("../models/weeklySchedule"); // ודאי שהשורה הזו קיימת למעלה
+
+// ודאי שהשורה הזו קיימת למעלה
 
 const addStudent = async (req, res) => {
     const { name, idNumber, parentEmail, classNumber } = req.body
@@ -221,10 +223,19 @@ const getAttendanceByLesson = async (req, res) => {
         res.status(500).json({ message: "Failed to fetch attendance", error: err });
     }
 };
+
+
 const sendWeeklyAttendanceEmails = async (req, res) => {
     try {
+        // ייבוא דינמי של p-limit, כי זו מודול ESM
+        const pLimit = (await import('p-limit')).default;
+        // הגבלת מקסימום 5 מיילים במקביל (ניתן לשנות לפי הצורך)
+        const limit = pLimit(5);
+
+        // שליפת תלמידות פעילות מהDB
         const students = await Student.find({ active: true });
 
+        // הגדרת שירות המייל
         const transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {
@@ -235,7 +246,7 @@ const sendWeeklyAttendanceEmails = async (req, res) => {
 
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
 
-        // פונקציה שמייצרת PDF ושולחת מייל לתלמידה אחת
+        // פונקציה שיוצרת PDF ושולחת מייל לתלמידה אחת
         const sendMailForStudent = (student) => {
             return new Promise((resolve, reject) => {
                 const doc = new PDFDocument({ margin: 50 });
@@ -248,8 +259,8 @@ const sendWeeklyAttendanceEmails = async (req, res) => {
                 ));
 
                 doc.font('Helvetica-Bold')
-                   .fontSize(18)
-                   .text(`Weekly Attendance Report - ${student.name}`, { align: 'left' });
+                    .fontSize(18)
+                    .text(`Weekly Attendance Report - ${student.name}`, { align: 'left' });
                 doc.moveDown();
 
                 const startX = 50;
@@ -272,10 +283,10 @@ const sendWeeklyAttendanceEmails = async (req, res) => {
                     days.forEach((day, j) => {
                         const status = attendance[day.toLowerCase()]?.[i]?.status || '';
                         doc.font('Helvetica')
-                           .text(status, startX + columnWidth * (j + 1), y, {
-                               width: columnWidth,
-                               align: 'center'
-                           });
+                            .text(status, startX + columnWidth * (j + 1), y, {
+                                width: columnWidth,
+                                align: 'center'
+                            });
                     });
                 }
 
@@ -287,8 +298,8 @@ const sendWeeklyAttendanceEmails = async (req, res) => {
                         await transporter.sendMail({
                             from: process.env.EMAIL_USER,
                             to: student.parentEmail,
-                            subject: `Weekly Attendance Report for ${student.name}`,
-                            text: `Hello,\nAttached is a PDF file with the weekly attendance summary for your child ${student.name}.`,
+                            subject: `Attendance Report for ${student.name}`,
+                            text: `Hi,\n\nAttached is your daughter's attendance for the week.\n\nThank you.`,
                             attachments: [
                                 {
                                     filename: `attendance_${student.name}.pdf`,
@@ -304,15 +315,20 @@ const sendWeeklyAttendanceEmails = async (req, res) => {
             });
         };
 
-        // שלח את כל המיילים במקביל
-        await Promise.all(students.map(sendMailForStudent));
+        // שליחת מיילים במקביל עם הגבלת concurrency
+        await Promise.all(
+            students.map(student => limit(() => sendMailForStudent(student)))
+        );
 
         res.json({ message: "Emails sent successfully!" });
+
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Error sending emails", error: err.message });
     }
 };
+
+
 const getYearlySchedule = async (req, res) => {
     try {
         const schedule = await Schedule.find(); // שליפת נתונים מה-DB
@@ -322,7 +338,24 @@ const getYearlySchedule = async (req, res) => {
     }
 };
 
+const resetWeeklyAttendance = async () => {
+    try {
+        await Student.updateMany({}, {
+            $set: {
+                weeklyAttendance: {
+                    sunday: [],
+                    monday: [],
+                    tuesday: [],
+                    wednesday: [],
+                    thursday: []
+                }
+            }
+        });
+        console.log('Weekly attendance reset successfully.');
+    } catch (err) {
+        console.error('Error resetting weekly attendance:', err);
+    }
+};
 
 
-
-module.exports = { addStudent, getById, getAll, updateStudent, updateActive, deleteById, getAllClasses, updateAttendanceForLesson, getStudentByClassNumber, getAttendanceByLesson,sendWeeklyAttendanceEmails,getYearlySchedule }
+module.exports = { addStudent, getById, getAll, updateStudent, updateActive, deleteById, getAllClasses, updateAttendanceForLesson, getStudentByClassNumber, getAttendanceByLesson, sendWeeklyAttendanceEmails, getYearlySchedule, resetWeeklyAttendance }

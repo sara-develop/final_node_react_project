@@ -1,13 +1,20 @@
 import { useState } from "react";
-import { addLesson } from "../lessons/lessonService";
+import axios from "axios";
+import { useSelector } from "react-redux";
 import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
 
+
 const AddLesson = ({ fetchLessons, setActiveComponent }) => {
     const [lesson, setLesson] = useState({ name: "", teacher: "" });
+    const token = useSelector(state => state.user.token);
 
     const handleSubmit = async () => {
-        await addLesson(lesson);
+        await axios.post(
+            `http://localhost:1235/api/lesson/addLesson`,
+            lesson,
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
         fetchLessons();
         setActiveComponent("");
     };
@@ -57,11 +64,19 @@ const AddLesson = ({ fetchLessons, setActiveComponent }) => {
                 <div className="p-fluid">
                     <div className="mb-3">
                         <label className="block font-bold mb-1" style={{ color: purpleColor }}>Name</label>
-                        <InputText value={lesson.name} onChange={(e) => setLesson({ ...lesson, name: e.target.value })} placeholder="Name" />
+                        <InputText
+                            value={lesson.name}
+                            onChange={(e) => setLesson({ ...lesson, name: e.target.value })}
+                            placeholder="Name"
+                        />
                     </div>
                     <div className="mb-4">
                         <label className="block font-bold mb-1" style={{ color: purpleColor }}>Teacher</label>
-                        <InputText value={lesson.teacher} onChange={(e) => setLesson({ ...lesson, teacher: e.target.value })} placeholder="Teacher" />
+                        <InputText
+                            value={lesson.teacher}
+                            onChange={(e) => setLesson({ ...lesson, teacher: e.target.value })}
+                            placeholder="Teacher"
+                        />
                     </div>
                     <div className="flex justify-center">
                         <Button label="Save" onClick={handleSubmit} style={buttonStyle} />

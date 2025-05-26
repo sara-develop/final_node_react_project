@@ -4,6 +4,7 @@ import { Password } from "primereact/password";
 import { Button } from "primereact/button";
 import { Divider } from "primereact/divider";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from 'react-redux'; // לקריאת מידע מה־Redux store
 import Axios from "axios";
 
 import logo from "../assets/logo.png";
@@ -17,23 +18,42 @@ const Register = () => {
     const [name, setName] = useState("");
     const [id, setId] = useState("");
     const [password, setPassword] = useState("");
+    const [error, setError] = useState(null);
     const navigate = useNavigate();
 
-    const gray = "#58585a"; 
+    const gray = "#58585a";
     const purple = "#542468";
 
+    const token = useSelector(state => state.user.token)  // קריאת שם המשתמש מה־Redux, או ברירת מחדל
+
     const handleRegister = async () => {
+        //const token = localStorage.getItem("accessToken"); // השגת הטוקן
+
+        if (!token) {
+            setError("You must be logged in as admin to register a new user.");
+            return;
+        }
+
+        const data = { name, id, password };
+
         try {
-            const response = await Axios.post("http://localhost:1235/api/user/register", {
-                name,
-                id,
-                password,
-            });
+            const response = await Axios.post(
+                "http://localhost:1235/api/user/register",
+                data,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
 
             console.log("Register successful:", response.data);
-            navigate("/");
+            navigate("/Homepage"); // ניווט לעמוד הבית לאחר רישום מוצלח
         } catch (error) {
             console.error("Registration failed:", error.response?.data || error.message);
+            setError(
+                error.response?.data?.message || "Registration failed. Please try again."
+            );
         }
     };
 
@@ -69,6 +89,18 @@ const Register = () => {
                     <h2 className="mb-4" style={{ color: purple }}>
                         Register
                     </h2>
+
+                    {error && (
+                        <div
+                            style={{
+                                marginBottom: "1rem",
+                                color: "red",
+                                fontWeight: "bold",
+                            }}
+                        >
+                            {error}
+                        </div>
+                    )}
 
                     <div className="mb-3">
                         <label className="block font-bold mb-1" style={{ color: gray }}>
@@ -120,13 +152,7 @@ const Register = () => {
                         OR
                     </Divider>
 
-                    <a href="/login">
-                        <Button
-                            label="Back to Login"
-                            className="w-full p-button-outlined"
-                            style={{ color: purple, borderColor: purple }}
-                        />
-                    </a>
+                    {/* כאן אפשר להוסיף קישור חזרה לעמוד כניסה אם רוצים */}
                 </div>
             </div>
         </div>
