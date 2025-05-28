@@ -9,7 +9,7 @@ const cron = require('node-cron');
 // קבצים פנימיים
 const corsOptions = require("./config/corsOptions")
 const connectDB = require("./config/dbconn")
-const { resetWeeklyAttendance } = require('./controllers/studentController'); // אם הפרדת לפונקציה נפרדת
+const { resetWeeklyAttendance } = require('./utils'); // אם הפרדת לפונקציה נפרדת
 
 
 // הגדרות כלליות

@@ -37,8 +37,7 @@ const Layout = ({ children }) => { // קומפוננטת Layout שמקבלת chi
         { label: 'students', icon: 'pi pi-users', path: '/students' },
         { label: 'lessons', icon: 'pi pi-book', path: '/lessons' },
         { label: 'schedule', icon: 'pi pi-calendar', path: '/schedule' },
-        { label: 'attendance', icon: 'pi pi-list-check', path: '/attendance' },
-        { label: 'calendar', icon: 'pi pi-calendar', path: '/yearlySchedule' }
+        { label: 'attendance', icon: 'pi pi-list-check', path: '/attendance' }
     ];
 
     const activeIndex = items.findIndex(item => item.path === location.pathname); // קביעת הלשונית הפעילה לפי הנתיב הנוכחי

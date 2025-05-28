@@ -1,23 +1,41 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
-
+import { Toast } from "primereact/toast";
 
 const AddLesson = ({ fetchLessons, setActiveComponent }) => {
     const [lesson, setLesson] = useState({ name: "", teacher: "" });
     const token = useSelector(state => state.user.token);
+    const toast = useRef(null);
 
     const handleSubmit = async () => {
-        await axios.post(
-            `http://localhost:1235/api/lesson/addLesson`,
-            lesson,
-            { headers: { Authorization: `Bearer ${token}` } }
-        );
-        fetchLessons();
-        setActiveComponent("");
+        if (!lesson.name.trim()) {
+            toast.current.show({ severity: 'warn', summary: 'Validation', detail: 'Lesson name is required.', life: 3000 });
+            return;
+        }
+        if (!lesson.teacher.trim()) {
+            toast.current.show({ severity: 'warn', summary: 'Validation', detail: 'Teacher name is required.', life: 3000 });
+            return;
+        }
+
+        try {
+            const response = await axios.post(
+                `http://localhost:1235/api/lesson/addLesson`,
+                lesson,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            // הצג הודעה מהשרת
+            toast.current.show({ severity: 'success', summary: 'Success', detail: response.data.message, life: 3000 });
+            fetchLessons();
+            setActiveComponent("");
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Failed to add lesson. Please try again.';
+            toast.current.show({ severity: 'error', summary: 'Error', detail: errorMessage, life: 3000 });
+        }
     };
+
 
     const purpleColor = '#542468';
 
@@ -36,6 +54,7 @@ const AddLesson = ({ fetchLessons, setActiveComponent }) => {
             paddingTop: '3rem',
             backgroundColor: '#FFFFFF',
         }}>
+            <Toast ref={toast} />
             <div style={{
                 backgroundColor: '#FFFFFF',
                 borderRadius: '12px',

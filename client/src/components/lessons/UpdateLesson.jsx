@@ -4,15 +4,13 @@ import { useSelector } from "react-redux";
 import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
 
-const API = "http://localhost:1235/api/lesson";
-
 const UpdateLesson = ({ lesson, fetchLessons, setActiveComponent }) => {
     const [updatedLesson, setUpdatedLesson] = useState({ ...lesson });
     const token = useSelector(state => state.user.token);
 
     const handleSubmit = async () => {
         await axios.put(
-            `${API}/updateLesson/${updatedLesson._id}`,
+            `http://localhost:1235/api/lesson/updateLesson/${updatedLesson._id}`,
             updatedLesson,
             { headers: { Authorization: `Bearer ${token}` } }
         );

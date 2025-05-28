@@ -14,7 +14,6 @@ router.get("/getAllClasses", verifyJWT, Student.getAllClasses);
 router.put("/updateAttendanceForLesson", verifyJWT, Student.updateAttendanceForLesson);
 router.get("/getStudentByClassNumber/:classNumber", verifyJWT, Student.getStudentByClassNumber)
 router.get("/getAttendanceByLesson/:classNumber/:day/:lessonId", verifyJWT, Student.getAttendanceByLesson)
-router.get("/getYearlySchedule", verifyJWT, Student.getYearlySchedule)
-router.post("/sendWeeklyAttendanceEmails", verifyJWT, Student.sendWeeklyAttendanceEmails)
+router.post("/sendWeeklyAttendanceEmailsHandler", verifyJWT, Student.sendWeeklyAttendanceEmailsHandler)
 
 module.exports = router

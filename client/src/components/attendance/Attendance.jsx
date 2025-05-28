@@ -104,7 +104,7 @@ const Attendance = () => {
         try {
             const token = localStorage.getItem("token");
             await Axios.post(
-                'http://localhost:1235/api/student/sendWeeklyAttendanceEmails',
+                'http://localhost:1235/api/student/sendWeeklyAttendanceEmailsHandler',
                 {},
                 { headers: { Authorization: `Bearer ${token}` } }
             );

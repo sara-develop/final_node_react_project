@@ -1,11 +1,7 @@
 const Student = require("../models/student");
-const WeeklySchedule = require("../models/weeklySchedule"); // ודאי שהשורה הזו קיימת למעלה
-const nodemailer = require("nodemailer");
-const PDFDocument = require("pdfkit");
+const WeeklySchedule = require("../models/weeklySchedule"); 
 const { isValidId } = require("../utils")
-const Schedule = require("../models/weeklySchedule"); // ודאי שהשורה הזו קיימת למעלה
-
-// ודאי שהשורה הזו קיימת למעלה
+const { sendWeeklyAttendanceEmails } = require("../utils");
 
 const addStudent = async (req, res) => {
     const { name, idNumber, parentEmail, classNumber } = req.body
@@ -224,138 +220,16 @@ const getAttendanceByLesson = async (req, res) => {
     }
 };
 
-
-const sendWeeklyAttendanceEmails = async (req, res) => {
+const sendWeeklyAttendanceEmailsHandler = async (req, res) => {
     try {
-        // ייבוא דינמי של p-limit, כי זו מודול ESM
-        const pLimit = (await import('p-limit')).default;
-        // הגבלת מקסימום 5 מיילים במקביל (ניתן לשנות לפי הצורך)
-        const limit = pLimit(5);
-
-        // שליפת תלמידות פעילות מהDB
-        const students = await Student.find({ active: true });
-
-        // הגדרת שירות המייל
-        const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            }
-        });
-
-        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
-
-        // פונקציה שיוצרת PDF ושולחת מייל לתלמידה אחת
-        const sendMailForStudent = (student) => {
-            return new Promise((resolve, reject) => {
-                const doc = new PDFDocument({ margin: 50 });
-                let buffers = [];
-                doc.on('data', buffers.push.bind(buffers));
-
-                const attendance = student.weeklyAttendance || {};
-                const maxLessons = Math.max(...days.map(day =>
-                    (attendance[day.toLowerCase()] || []).length
-                ));
-
-                doc.font('Helvetica-Bold')
-                    .fontSize(18)
-                    .text(`Weekly Attendance Report - ${student.name}`, { align: 'left' });
-                doc.moveDown();
-
-                const startX = 50;
-                const columnWidth = 90;
-                let y = doc.y;
-
-                doc.font('Helvetica-Bold').fontSize(12);
-                doc.text('Lesson #', startX, y, { width: columnWidth, align: 'center' });
-                days.forEach((day, i) => {
-                    doc.text(day, startX + columnWidth * (i + 1), y, { width: columnWidth, align: 'center' });
-                });
-
-                for (let i = 0; i < maxLessons; i++) {
-                    y += 20;
-                    doc.font('Helvetica-Bold').text(`${i + 1}`, startX, y, {
-                        width: columnWidth,
-                        align: 'center'
-                    });
-
-                    days.forEach((day, j) => {
-                        const status = attendance[day.toLowerCase()]?.[i]?.status || '';
-                        doc.font('Helvetica')
-                            .text(status, startX + columnWidth * (j + 1), y, {
-                                width: columnWidth,
-                                align: 'center'
-                            });
-                    });
-                }
-
-                doc.end();
-
-                doc.on('end', async () => {
-                    const pdfData = Buffer.concat(buffers);
-                    try {
-                        await transporter.sendMail({
-                            from: process.env.EMAIL_USER,
-                            to: student.parentEmail,
-                            subject: `Attendance Report for ${student.name}`,
-                            text: `Hi,\n\nAttached is your daughter's attendance for the week.\n\nThank you.`,
-                            attachments: [
-                                {
-                                    filename: `attendance_${student.name}.pdf`,
-                                    content: pdfData
-                                }
-                            ]
-                        });
-                        resolve();
-                    } catch (err) {
-                        reject(err);
-                    }
-                });
-            });
-        };
-
-        // שליחת מיילים במקביל עם הגבלת concurrency
-        await Promise.all(
-            students.map(student => limit(() => sendMailForStudent(student)))
-        );
-
-        res.json({ message: "Emails sent successfully!" });
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Error sending emails", error: err.message });
-    }
-};
-
-
-const getYearlySchedule = async (req, res) => {
-    try {
-        const schedule = await Schedule.find(); // שליפת נתונים מה-DB
-        res.status(200).json(schedule);
+        const result = await sendWeeklyAttendanceEmails();
+        res.json(result);
     } catch (error) {
-        res.status(500).json({ message: 'Failed to fetch schedule', error });
-    }
-};
-
-const resetWeeklyAttendance = async () => {
-    try {
-        await Student.updateMany({}, {
-            $set: {
-                weeklyAttendance: {
-                    sunday: [],
-                    monday: [],
-                    tuesday: [],
-                    wednesday: [],
-                    thursday: []
-                }
-            }
-        });
-        console.log('Weekly attendance reset successfully.');
-    } catch (err) {
-        console.error('Error resetting weekly attendance:', err);
+        res.status(500).json({ message: error.message || "Error sending emails" });
     }
 };
 
 
-module.exports = { addStudent, getById, getAll, updateStudent, updateActive, deleteById, getAllClasses, updateAttendanceForLesson, getStudentByClassNumber, getAttendanceByLesson, sendWeeklyAttendanceEmails, getYearlySchedule, resetWeeklyAttendance }
+module.exports = {
+    addStudent, getById, getAll, updateStudent, updateActive, deleteById, getAllClasses, updateAttendanceForLesson, getStudentByClassNumber, getAttendanceByLesson, sendWeeklyAttendanceEmailsHandler
+}

@@ -18,7 +18,6 @@ import ScheduleManagement from './components/schedule/ScheduleManagement';
 import StudentManagement from './components/students/StudentManagement';
 import LessonsManagement from './components/lessons/LessonsManagement';
 import Attendance from './components/attendance/Attendance';
-import CalendarManager from './components/yearlySchedule/CalendarManager';
 
 function AppContent() {
     const dispatch = useDispatch();
@@ -55,7 +54,6 @@ function AppContent() {
                 <Route path="/students" element={<Layout><StudentManagement /></Layout>} />
                 <Route path="/homePage" element={<Layout><HomePage /></Layout>} />
                 <Route path="/attendance" element={<Layout><Attendance /></Layout>} />
-                <Route path="/yearlySchedule" element={<Layout><CalendarManager /></Layout>} />
             </Routes>
         </Router>
     );
