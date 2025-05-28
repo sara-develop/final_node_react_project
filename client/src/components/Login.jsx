@@ -184,28 +184,28 @@ const Login = () => {
 
 
     const handleLogin = async () => {
-    try {
-        const response = await Axios.post("http://localhost:1235/api/user/login", {
-            id,
-            password,
-        });
+        try {
+            const response = await Axios.post("http://localhost:1235/api/user/login", {
+                id,
+                password,
+            });
 
-        const token = response.data.accessToken;
-        const decoded = jwtDecode(token);
-        const username = decoded.username || decoded.name || decoded.id;
-        const isManager = decoded.isManager;
+            const token = response.data.accessToken;
+            const decoded = jwtDecode(token);
+            const username = decoded.username || decoded.name || decoded.id;
+            const isManager = decoded.isManager;
 
-        localStorage.setItem("token", token);
-        localStorage.setItem("username", username);
-        localStorage.setItem("isManager", isManager); // שמירה ב-localStorage
+            localStorage.setItem("token", token);
+            localStorage.setItem("username", username);
+            localStorage.setItem("isManager", isManager); // שמירה ב-localStorage
 
-        dispatch(setUser({ username, token, isManager })); // שמירה ב-Redux
+            dispatch(setUser({ username, token, isManager })); // שמירה ב-Redux
 
-        navigate("/HomePage");
-    } catch (error) {
-        console.error("Login failed:", error.response?.data || error.message);
-    }
-};
+            navigate("/HomePage");
+        } catch (error) {
+            console.error("Login failed:", error.response?.data || error.message);
+        }
+    };
 
 
     const goToRegister = () => {
@@ -224,7 +224,7 @@ const Login = () => {
                         Welcome to our platform
                     </h3>
                     <p style={{ color: gray }}>
-                        Login to manage your cloud resources and services.
+                        Login to manage the schedule, attendance and users.
                     </p>
 
                     <div className="flex justify-content-center align-items-center mt-5 w-full">
@@ -267,7 +267,7 @@ const Login = () => {
                         style={{ backgroundColor: purple, borderColor: purple }}
                     />
 
-                    <Divider align="center" className="my-3" style={{ color: gray }}>OR</Divider>
+                    {/* <Divider align="center" className="my-3" style={{ color: gray }}>OR</Divider> */}
 
                     {/* <Button
                         label="Register"

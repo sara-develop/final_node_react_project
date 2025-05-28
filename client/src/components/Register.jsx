@@ -57,6 +57,10 @@ const Register = () => {
         }
     };
 
+    const goBack = () => {
+        navigate('/homePage');
+    };
+
     return (
         <div className="flex flex-column justify-content-center align-items-center min-h-screen px-3 bg-white">
             <div className="mb-4">
@@ -69,7 +73,7 @@ const Register = () => {
                         Join our platform
                     </h3>
                     <p style={{ color: purple }}>
-                        Register to start managing your cloud resources and services.
+                        Register a secretary to your platform.
                     </p>
 
                     <div className="flex justify-content-center align-items-center mt-5 w-full">
@@ -152,7 +156,12 @@ const Register = () => {
                         OR
                     </Divider>
 
-                    {/* כאן אפשר להוסיף קישור חזרה לעמוד כניסה אם רוצים */}
+                    <Button
+                        label="Back to Home Page"
+                        onClick={goBack}
+                        className="w-full"
+                        style={{ backgroundColor: purple, borderColor: purple }}
+                    />
                 </div>
             </div>
         </div>

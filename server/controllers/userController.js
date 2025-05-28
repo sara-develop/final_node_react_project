@@ -105,9 +105,28 @@ const deleteUser = async (req, res) => {
     }
 };
 
+const getAllUsers = async (req, res) => {
+    try {
+        // בדיקת הרשאת מנהל לפי ה-id
+        if (!req.user || req.user.id !== process.env.MANAGER_ID) {
+            return res.status(403).json({ message: "Only the manager can view all users" });
+        }
+
+        const users = await User.find({}, { password: 0 }).lean(); // לא מחזירים את הסיסמה
+        return res.status(200).json(users);
+
+    } catch (err) {
+        return res.status(500).json({
+            message: 'Failed to fetch users',
+            error: process.env.NODE_ENV === 'development' ? err.message : undefined
+        });
+    }
+};
+
 module.exports = {
     login,
     register,
     updateUser,
-    deleteUser
+    deleteUser,
+    getAllUsers
 };

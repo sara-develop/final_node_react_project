@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Button } from 'primereact/button';
-import axios from 'axios';
 import { useSelector } from 'react-redux';
+import { ConfirmDialog } from 'primereact/confirmdialog';
+import { Toast } from 'primereact/toast';
+import axios from 'axios';
 
 import UpdateStudent from './UpdateStudent';
 import AddStudent from './AddStudent';
@@ -14,16 +16,17 @@ const StudentManagement = () => {
   const [allStudents, setAllStudents] = useState([]);
   const [activeComponent, setActiveComponent] = useState('');
   const [student, setStudent] = useState(null);
+  const [deleteId, setDeleteId] = useState(null);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const token = useSelector(state => state.user.token);
+  const toast = useRef(null);
 
-  // Fetch students and sort by name A-Z
   const fetchStudents = async () => {
     try {
       const { data } = await axios.get(`${API_BASE}/getAllStudents`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      // מיון לפי שם (A-Z)
       const sorted = data.slice().sort((a, b) => a.name.localeCompare(b.name));
       setAllStudents(sorted);
     } catch (error) {
@@ -31,29 +34,55 @@ const StudentManagement = () => {
     }
   };
 
-  const deleteStudent = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this student?')) return;
+  const confirmDelete = (id) => {
+    setDeleteId(id);
+    setShowConfirm(true);
+  };
 
+  const deleteStudent = async () => {
     try {
-      await axios.delete(`${API_BASE}/deleteStudent/${id}`, {
+      await axios.delete(`${API_BASE}/deleteStudent/${deleteId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchStudents();
+      toast.current.show({
+        severity: 'error',
+        summary: 'Deleted',
+        detail: 'Student deleted successfully',
+        life: 3000,
+      });
     } catch (error) {
-      console.error('Error deleting student:', error);
+      toast.current.show({
+        severity: 'warn',
+        summary: 'Error',
+        detail: 'Could not delete student',
+        life: 3000,
+      });
+    } finally {
+      setShowConfirm(false);
+      setDeleteId(null);
     }
   };
 
   const toggleActiveStatus = async (id) => {
-    if (!window.confirm('Are you sure you want to change the active status of this student?')) return;
-
     try {
       await axios.put(`${API_BASE}/changeActive/${id}`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchStudents();
+      toast.current.show({
+        severity: 'success',
+        summary: 'Status Changed',
+        detail: 'Student status updated',
+        life: 3000,
+      });
     } catch (error) {
-      console.error('Error toggling active status:', error);
+      toast.current.show({
+        severity: 'warn',
+        summary: 'Error',
+        detail: 'Could not change status',
+        life: 3000,
+      });
     }
   };
 
@@ -84,16 +113,29 @@ const StudentManagement = () => {
         fetchStudents={fetchStudents}
         student={student}
         setActiveComponent={setActiveComponent}
+        toast={toast}
       />
     );
   }
 
   if (activeComponent === 'add') {
-    return <AddStudent fetchStudents={fetchStudents} setActiveComponent={setActiveComponent} />;
+    return <AddStudent fetchStudents={fetchStudents} setActiveComponent={setActiveComponent} toast={toast} />;
   }
 
   return (
     <div className="card" style={{ backgroundColor: '#F4F4F4' }}>
+      <Toast ref={toast} />
+      <ConfirmDialog
+        visible={showConfirm}
+        onHide={() => setShowConfirm(false)}
+        message="Are you sure you want to delete this student?"
+        header="Delete Confirmation"
+        icon={null}
+        acceptClassName="p-button-danger"
+        rejectClassName="p-button-success"
+        accept={deleteStudent}
+        reject={() => setShowConfirm(false)}
+      />
       <DataTable
         value={allStudents}
         header={header}
@@ -121,7 +163,7 @@ const StudentManagement = () => {
                 tooltip={rowData.active ? 'Deactivate' : 'Activate'}
               />
               <Button
-                onClick={() => deleteStudent(rowData._id)}
+                onClick={() => confirmDelete(rowData._id)}
                 icon="pi pi-trash"
                 className="p-button-rounded"
                 style={buttonStyle}

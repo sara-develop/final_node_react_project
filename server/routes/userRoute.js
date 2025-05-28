@@ -12,5 +12,6 @@ router.post("/login", User.login)
 router.put("/updateUser", verifyJWT, User.updateUser)
 router.delete("/deleteUser", verifyJWT, User.deleteUser)
 router.post("/register", verifyJWT, User.register)
+router.get("/getAllUsers", verifyJWT, User.getAllUsers)
 
 module.exports = router

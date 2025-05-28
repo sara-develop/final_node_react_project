@@ -1,9 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { Button } from "primereact/button";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
+import { ConfirmDialog } from "primereact/confirmdialog";
+import { confirmDialog } from "primereact/confirmdialog";
+import { Toast } from "primereact/toast";
 import AddLesson from "./AddLesson";
 import UpdateLesson from "./UpdateLesson";
 
@@ -12,33 +15,45 @@ const LessonsManagement = () => {
   const [activeComponent, setActiveComponent] = useState("");
   const [selectedLesson, setSelectedLesson] = useState(null);
   const token = useSelector((state) => state.user.token);
+  const toast = useRef(null);
 
   const fetchLessons = async () => {
     try {
       const { data } = await axios.get(`http://localhost:1235/api/lesson/getAllLessons`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      // מיון לפי שם השיעור (name) בסדר עולה
-      const sortedLessons = data.sort((a, b) =>
-        a.name.localeCompare(b.name)
-      );
+      const sortedLessons = data.sort((a, b) => a.name.localeCompare(b.name));
       setLessons(sortedLessons);
     } catch (error) {
       console.error("Error fetching lessons:", error);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this lesson?")) {
-      try {
-        await axios.delete(`http://localhost:1235/api/lesson/deleteLesson/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        fetchLessons();
-      } catch (error) {
-        console.error("Error deleting lesson:", error);
-      }
-    }
+  const handleDelete = (id) => {
+    confirmDialog({
+      message: "Are you sure you want to delete this lesson?",
+      header: "Delete Confirmation",
+      acceptClassName: "p-button-success", // Green
+      rejectClassName: "p-button-danger", // Red
+      acceptLabel: "Yes",
+      rejectLabel: "No",
+      accept: async () => {
+        try {
+          await axios.delete(`http://localhost:1235/api/lesson/deleteLesson/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          fetchLessons();
+          toast.current.show({
+            severity: "error", // אדום
+            summary: "Deleted",
+            detail: "Lesson deleted successfully",
+            life: 3000,
+          });
+        } catch (error) {
+          console.error("Error deleting lesson:", error);
+        }
+      },
+    });
   };
 
   useEffect(() => {
@@ -72,6 +87,9 @@ const LessonsManagement = () => {
 
   return (
     <div className="card">
+      <Toast ref={toast} />
+      <ConfirmDialog />
+
       <DataTable value={lessons} tableStyle={{ minWidth: "60rem" }}>
         <Column field="name" header="Lesson Name" />
         <Column field="teacher" header="Teacher" />

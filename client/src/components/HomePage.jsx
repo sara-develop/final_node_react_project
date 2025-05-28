@@ -64,6 +64,10 @@ const HomePage = () => {
         navigate("/register");
     };
 
+    const handleGoToAllUsers = () => {
+        navigate("/allUsers");
+    };
+
     return (
         <div className="p-4" style={{ direction: "ltr" }}>
             <h1 style={{ textAlign: "left", color: "#542468", marginTop: "2rem" }}>
@@ -85,12 +89,19 @@ const HomePage = () => {
             </div>
 
             {isManager && (
-                <div style={{ marginTop: "2rem" }}>
+                <div style={{ marginTop: "2rem", display: "flex", gap: "1rem", flexWrap: "wrap" }}>
                     <Button
                         label="Add New User"
                         icon="pi pi-user-plus"
                         onClick={handleGoToRegister}
                         style={{ backgroundColor: "#542468", borderColor: "#542468" }}
+                        className="p-button-rounded"
+                    />
+                    <Button
+                        label="View All Users"
+                        icon="pi pi-users"
+                        onClick={handleGoToAllUsers}
+                        style={{ backgroundColor: "#6a4c93", borderColor: "#6a4c93" }}
                         className="p-button-rounded"
                     />
                 </div>

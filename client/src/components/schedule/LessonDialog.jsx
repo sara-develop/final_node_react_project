@@ -11,8 +11,6 @@ const LessonDialog = ({
     onHide,
     selectedDay,
     lessonIndex,
-    schedule,
-    setSchedule,
     classNumber,
     refreshSchedule,
 }) => {
