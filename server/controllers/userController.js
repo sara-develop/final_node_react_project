@@ -39,26 +39,42 @@ const login = async (req, res) => {
 };
 
 const register = async (req, res) => {
+    console.log('Decoded user from token:', req.user)
+
     try {
+        // בדיקת הרשאת מנהל לפי ה-id
+        // if (!req.user || req.user.id !== process.env.MANAGER_ID) {
+        //     return res.status(403).json({ message: "Only the manager can register new users" });
+        // }
+
         const { name, id, password } = req.body;
 
         if (!name || !id || !password) {
             return res.status(400).json({ message: 'All fields are required' });
         }
 
+        // if (!isValidId(id)) {
+        //     return res.status(400).json({ message: 'Invalid ID format' });
+        // }
+
         const duplicate = await User.findOne({ id }).lean();
         if (duplicate) {
-            return res.status(409).json({ message: 'Duplicate ID' });
+            return res.status(409).json({ message: "User with this ID already exists" });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPwd = await bcrypt.hash(password, 10);
 
-        const userObject = { name, id, password: hashedPassword };
+        const role = id === process.env.MANAGER_ID ? 'principal' : 'secretary';
+        const userObject = { name, id, password: hashedPwd, role };
+
         const user = await User.create(userObject);
-
         return res.status(201).json({ message: `New user ${user.name} created` });
+
     } catch (err) {
-        return res.status(500).json({ message: 'Registration failed', error: process.env.NODE_ENV === 'development' ? err.message : undefined });
+        return res.status(500).json({
+            message: 'User creation failed',
+            error: process.env.NODE_ENV === 'development' ? err.message : undefined
+        });
     }
 };
 
@@ -122,6 +138,7 @@ const getAllUsers = async (req, res) => {
         });
     }
 };
+
 
 module.exports = {
     login,
